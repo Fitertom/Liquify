@@ -1,0 +1,56 @@
+use std::any::TypeId;
+
+#[derive(Clone, Copy)]
+pub struct Position {
+    pub x: f32,
+    pub y: f32,
+}
+
+#[derive(Clone, Copy)]
+pub struct Size {
+    pub width: f32,
+    pub height: f32,
+}
+
+#[derive(Clone, Copy)]
+pub struct Color {
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
+    pub a: f32,
+}
+
+impl Color {
+    pub fn to_array(self) -> [f32; 4] {
+        [self.r, self.g, self.b, self.a]
+    }
+}
+
+#[derive(Clone)]
+pub struct UICard {
+    pub title: String,
+    pub subtitle: Option<String>,
+    pub icon: String,
+    pub tint: [f32; 3],
+    pub is_hovered: bool,
+}
+
+#[derive(Clone)]
+pub struct UIHeader {
+    pub title: String,
+    pub greeting: String,
+}
+
+#[derive(Clone)]
+pub struct UISection {
+    pub title: String,
+}
+
+#[derive(Clone, Copy)]
+pub struct Renderable {
+    pub visible: bool,
+}
+
+pub fn type_id_of<T: 'static>() -> TypeId {
+    TypeId::of::<T>()
+}

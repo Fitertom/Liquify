@@ -1,0 +1,5 @@
+/target/
+/target-apk/
+**/*.rs.bk
+*.apk
+.DS_Store

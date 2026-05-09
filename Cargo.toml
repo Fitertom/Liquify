@@ -1,0 +1,38 @@
+[package]
+name = "Liquify"
+version = "0.5.0"
+edition = "2024"
+
+[lib]
+name = "main"
+crate-type = ["cdylib"]
+path = "src/main.rs"
+
+[dependencies]
+wgpu = { version = "0.20", default-features = false, features = ["wgsl"] }
+winit = { version = "0.30", default-features = false, features = ["rwh_06", "android-native-activity"] }
+fontdue = "0.8"
+bytemuck = { version = "1.15", features = ["derive"] }
+pollster = "0.3"
+image = { version = "0.25", default-features = false, features = ["png"] }
+jni = "0.21"
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+opt-level = "z"
+panic = "abort"
+strip = "symbols"
+
+[package.metadata.android]
+package = "com.test.liquify"
+label = "Liquify"
+build_targets = ["aarch64-linux-android"]
+min_sdk_version = 26
+target_sdk_version = 35
+
+[package.metadata.android.signing.release]
+path = "C:/Users/user/.android/debug.keystore"
+keystore_password = "android"
+key_alias = "androiddebugkey"
+key_password = "android"

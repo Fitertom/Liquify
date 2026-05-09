@@ -1,0 +1,3 @@
+@echo off
+echo Monitoring FPS for device 9d5e705b...
+adb -s 9d5e705b logcat -v raw -s RustStdoutStderr:I | findstr "FPS"
