@@ -19,6 +19,7 @@ pub struct FontAtlas {
     glyph_size: u32,
     fast_cache: [Option<AtlasGlyph>; 256],
     fallback_cache: HashMap<u32, AtlasGlyph>,
+    pub dirty: bool,
 }
 
 impl FontAtlas {
@@ -36,6 +37,7 @@ impl FontAtlas {
             glyph_size: size,
             fast_cache: [None; 256],
             fallback_cache: HashMap::new(),
+            dirty: true,
         }
     }
 
@@ -90,7 +92,7 @@ impl FontAtlas {
         }
 
         let ox = metrics.xmin as f32 - 1.0;
-        let oy = (self.line_height as f32) - (metrics.ymin as f32) - (metrics.height as f32) - 1.0;
+        let oy = -(metrics.ymin as f32 + metrics.height as f32) - 1.0;
 
         let glyph = AtlasGlyph {
             rect: [sx, sy, gw, gh],
@@ -102,6 +104,7 @@ impl FontAtlas {
         } else {
             self.fallback_cache.insert(codepoint, glyph);
         }
+        self.dirty = true;
         glyph
     }
 
@@ -157,5 +160,9 @@ impl FontAtlas {
             );
             queue.submit(std::iter::once(encoder.finish()));
         }
+    }
+
+    pub fn clear_dirty(&mut self) {
+        self.dirty = false;
     }
 }

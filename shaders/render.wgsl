@@ -10,12 +10,18 @@ var background_texture: texture_2d<f32>;
 @group(0) @binding(3)
 var blurred_texture: texture_2d<f32>;
 
+@group(0) @binding(4)
+var icon_texture: texture_2d<f32>;
+
+@group(0) @binding(5)
+var cover_texture: texture_2d<f32>;
+
 struct VertexInput {
     @location(0) position: vec2<f32>,
     @location(1) tex_coord: vec2<f32>,
     @location(2) screen_uv: vec2<f32>,
     @location(3) color: vec4<f32>,
-    @location(4) quad_size: vec2<f32>,
+    @location(4) quad_size: vec3<f32>,
 };
 
 struct VertexOutput {
@@ -23,7 +29,7 @@ struct VertexOutput {
     @location(0) tex_coord: vec2<f32>,
     @location(1) screen_uv: vec2<f32>,
     @location(2) color: vec4<f32>,
-    @location(3) quad_size: vec2<f32>,
+    @location(3) quad_size: vec3<f32>,
 };
 
 @vertex
@@ -80,17 +86,17 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
 
     // --- SHADOW PASS ---
     if (input.color.a < 0.0 && input.color.a > -1.0) {
-        let p = (input.tex_coord - 0.5) * input.quad_size;
-        let d = get_sd_round_box(p, input.quad_size * 0.5 - 8.0, min(input.quad_size.x, input.quad_size.y) * 0.1);
+        let p = (input.tex_coord - 0.5) * input.quad_size.xy;
+        let d = get_sd_round_box(p, input.quad_size.xy * 0.5 - 8.0, min(input.quad_size.x, input.quad_size.y) * 0.1);
         return vec4<f32>(0.0, 0.0, 0.0, abs(input.color.a) * (1.0 - smoothstep(-2.0, 15.0, d)));
     }
 
     // --- UI / GLASS PASS ---
     if (input.color.a < -1.0) {
         let strength = abs(input.color.a) - 1.0;
-        let half_size = input.quad_size * 0.5;
-        let p = (input.tex_coord - 0.5) * input.quad_size;
-        let radius = min(half_size.x, half_size.y) * 0.4;
+        let half_size = input.quad_size.xy * 0.5;
+        let p = (input.tex_coord - 0.5) * input.quad_size.xy;
+        let radius = input.quad_size.z;
         let d = get_sd_round_box(p, half_size, radius);
 
         // Alpha mask
@@ -121,6 +127,23 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
         return vec4<f32>(glass, mask);
     }
 
+    // --- PHOTOS / COVERS ---
+    if (input.screen_uv.x == -2.0) {
+        let tex_color = textureSample(cover_texture, my_sampler, input.tex_coord);
+        return vec4<f32>(tex_color.rgb * input.color.rgb, tex_color.a * input.color.a);
+    }
+
+    // --- ICONS (SDF) ---
+    if (input.screen_uv.x == -1.0) {
+        let dist = textureSample(icon_texture, my_sampler, input.tex_coord).a;
+        let fw = fwidth(dist);
+        // smoothstep returns an alpha mask (0.0 to 1.0) for the icon shape.
+        // We multiply it by the vertex color's alpha to support fading/inactive states.
+        let alpha = smoothstep(0.5 - fw, 0.5 + fw, dist) * input.color.a;
+        if (alpha < 0.01) { discard; }
+        return vec4<f32>(input.color.rgb, alpha);
+    }
+
     // --- DEFAULT TEXT / UI ---
     if (input.color.a == 0.0) {
         return vec4<f32>(input.color.rgb, 1.0);
@@ -128,5 +151,6 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
     
     let tex_color = textureSample(font_texture, my_sampler, input.tex_coord);
     let alpha = tex_color.r * input.color.a;
-    return vec4<f32>(input.color.rgb * alpha, alpha);
+    // Do not pre-multiply rgb by alpha here, because wgpu::BlendState::ALPHA_BLENDING uses SrcAlpha!
+    return vec4<f32>(input.color.rgb, alpha);
 }

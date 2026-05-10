@@ -30,6 +30,9 @@ pub struct ScrollState {
 }
 
 impl ScrollState {
+    pub fn set_content_height(&mut self, height: f32) {
+        self.content_height = height;
+    }
     pub fn new() -> Self {
         ScrollState {
             offset: 0.0,
@@ -57,7 +60,7 @@ impl ScrollState {
         self.velocity_sample_idx = 0;
     }
 
-    pub fn on_touch_move(&mut self, y: f32, time: f64) {
+    pub fn on_touch_move(&mut self, y: f32, time: f64, view_height: f32) {
         if !self.is_dragging {
             return;
         }
@@ -71,7 +74,7 @@ impl ScrollState {
         }
 
         self.offset = self.offset_at_start + (self.touch_start_y - y);
-        self.clamp_with_rubber_band();
+        self.clamp_with_rubber_band(view_height);
 
         self.last_touch_y = y;
         self.last_touch_time = time;
@@ -131,12 +134,15 @@ impl ScrollState {
         }
     }
 
-    fn clamp_with_rubber_band(&mut self) {
-        let max_rubber = 120.0;
+    fn clamp_with_rubber_band(&mut self, view_height: f32) {
+        let max_rubber = 60.0;
+        let max_scroll = (self.content_height - view_height).max(0.0);
+        
         if self.offset < -max_rubber {
             self.offset = -max_rubber;
+        } else if self.offset > max_scroll + max_rubber {
+            self.offset = max_scroll + max_rubber;
         }
-        // No hard clamp at bottom during drag — rubber band handles it
     }
 }
 

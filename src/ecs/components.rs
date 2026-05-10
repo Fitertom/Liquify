@@ -51,6 +51,27 @@ pub struct Renderable {
     pub visible: bool,
 }
 
+#[derive(Clone, PartialEq)]
+pub struct Page(pub String);
+
+#[derive(Clone)]
+pub struct UINavBar {
+    pub active_tab: String,
+}
+
+#[derive(Clone)]
+pub struct UINavButton {
+    pub id: String,
+    pub label: String,
+    pub icon: String,
+    pub is_active: bool,
+}
+
+#[derive(Clone)]
+pub struct UIImage {
+    pub path: String,
+}
+
 pub fn type_id_of<T: 'static>() -> TypeId {
     TypeId::of::<T>()
 }

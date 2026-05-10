@@ -79,7 +79,7 @@ impl AppState {
     async fn new(window: &Window, #[cfg(target_os = "android")] android_app: AndroidApp) -> Self {
         let size = window.inner_size();
         let scale_factor = window.scale_factor() as f32;
-        let font_data = include_bytes!("../fonts/PlusJakartaSans-Bold.ttf");
+        let font_data = include_bytes!("../fonts/Roboto-Bold.ttf");
         let renderer = RenderPipeline::new(window, font_data).await;
 
         let mut world = ecs::World::new();
@@ -105,7 +105,8 @@ impl AppState {
         self.window_size = (width as f32, height as f32);
         self.scale_factor = scale_factor;
         self.renderer.resize(width, height);
-        systems::system_layout(&mut self.world, width as f32, height as f32, scale_factor);
+        let content_h = systems::system_layout(&mut self.world, width as f32, height as f32, scale_factor);
+        self.input.scroll.set_content_height(content_h);
     }
 
     fn on_mouse_move(&mut self, x: f32, y: f32) {
@@ -144,6 +145,10 @@ impl AppState {
             self.fps_frames = 0;
             self.fps_start = Instant::now();
         }
+
+        // Update layout and content height
+        let content_h = systems::system_layout(&mut self.world, self.window_size.0, self.window_size.1, self.scale_factor);
+        self.input.scroll.set_content_height(content_h);
 
         // Update scroll physics (inertia + rubber band)
         self.input.scroll.update(dt.min(0.05), self.window_size.1);
@@ -234,13 +239,20 @@ fn run_app(mut event_loop_builder: EventLoopBuilder<()>, #[cfg(target_os = "andr
                         }
                     }
                     WindowEvent::MouseInput { button, state: elem_state, .. } => {
-                        if elem_state == ElementState::Pressed
-                            && button == MouseButton::Left
-                        {
-                            if let Some(ref mut s) = state {
-                                s.on_mouse_press();
-                                if let Some(window) = window.as_ref() {
-                                    window.request_redraw();
+                        if button == MouseButton::Left {
+                            if elem_state == ElementState::Pressed {
+                                if let Some(ref mut s) = state {
+                                    s.on_mouse_press();
+                                    if let Some(window) = window.as_ref() {
+                                        window.request_redraw();
+                                    }
+                                }
+                            } else {
+                                if let Some(ref mut s) = state {
+                                    s.on_mouse_release();
+                                    if let Some(window) = window.as_ref() {
+                                        window.request_redraw();
+                                    }
                                 }
                             }
                         }
@@ -259,11 +271,11 @@ fn run_app(mut event_loop_builder: EventLoopBuilder<()>, #[cfg(target_os = "andr
                     WindowEvent::Touch(touch) => {
                         if let Some(ref mut s) = state {
                             let (tx, ty) = (touch.location.x as f32, touch.location.y as f32);
-                            let time = s.fps_start.elapsed().as_secs_f64() + s.fps_frames as f64 * 0.001;
                             let time_abs = std::time::UNIX_EPOCH.elapsed().unwrap_or_default().as_secs_f64();
                             match touch.phase {
                                 TouchPhase::Started => {
                                     s.on_mouse_move(tx, ty);
+                                    s.on_mouse_press();
                                     s.input.scroll.on_touch_start(ty, time_abs);
                                     if let Some(window) = window.as_ref() {
                                         window.request_redraw();
@@ -271,7 +283,7 @@ fn run_app(mut event_loop_builder: EventLoopBuilder<()>, #[cfg(target_os = "andr
                                 }
                                 TouchPhase::Moved => {
                                     s.on_mouse_move(tx, ty);
-                                    s.input.scroll.on_touch_move(ty, time_abs);
+                                    s.input.scroll.on_touch_move(ty, time_abs, s.window_size.1);
                                     if let Some(window) = window.as_ref() {
                                         window.request_redraw();
                                     }

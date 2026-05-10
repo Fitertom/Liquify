@@ -27,7 +27,7 @@ pub struct RenderPipeline {
     pub vertex_buffer: wgpu::Buffer,
     pub vertex_count: u32,
     pub font_atlas: FontAtlas,
-    max_vertices: usize,
+    pub max_vertices: usize,
 
     pub blur_pipeline: wgpu::RenderPipeline,
     pub blur_params_buffer_h: wgpu::Buffer,
@@ -36,6 +36,12 @@ pub struct RenderPipeline {
     pub blurred_texture_view: wgpu::TextureView,
     pub temp_texture: wgpu::Texture,
     pub temp_texture_view: wgpu::TextureView,
+
+    pub icon_texture: wgpu::Texture,
+    pub icon_texture_view: wgpu::TextureView,
+
+    pub cover_texture: wgpu::Texture,
+    pub cover_texture_view: wgpu::TextureView,
 }
 
 impl RenderPipeline {
@@ -136,6 +142,26 @@ impl RenderPipeline {
                 },
                 wgpu::BindGroupLayoutEntry {
                     binding: 3,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                        multisampled: false,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 4,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                        multisampled: false,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 5,
                     visibility: wgpu::ShaderStages::FRAGMENT,
                     ty: wgpu::BindingType::Texture {
                         sample_type: wgpu::TextureSampleType::Float { filterable: true },
@@ -260,6 +286,81 @@ impl RenderPipeline {
         });
         let blurred_view = blurred_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
+        let icon_data = std::fs::read("assets/icons_sdf.png").unwrap_or_else(|_| include_bytes!("../../assets/icons_sdf.png").to_vec());
+        let icon_image = image::load_from_memory(&icon_data).expect("Failed to load icons_sdf.png");
+        let icon_rgba = icon_image.to_rgba8();
+        let (icon_w, icon_h) = icon_rgba.dimensions();
+
+        let icon_size = wgpu::Extent3d {
+            width: icon_w,
+            height: icon_h,
+            depth_or_array_layers: 1,
+        };
+        let icon_texture = device.create_texture(&wgpu::TextureDescriptor {
+            size: icon_size,
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8UnormSrgb,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            label: Some("Icon Texture"),
+            view_formats: &[],
+        });
+        queue.write_texture(
+            wgpu::ImageCopyTexture {
+                texture: &icon_texture,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+            },
+            &icon_rgba,
+            wgpu::ImageDataLayout {
+                offset: 0,
+                bytes_per_row: Some(4 * icon_w),
+                rows_per_image: Some(icon_h),
+            },
+            icon_size,
+        );
+        let icon_texture_view = icon_texture.create_view(&wgpu::TextureViewDescriptor::default());
+
+        // --- LOAD COVER TEXTURE (temp_icon.png) ---
+        let cover_data = std::fs::read("assets/temp_icon.png").unwrap_or_else(|_| include_bytes!("../../assets/temp_icon.png").to_vec());
+        let cover_image = image::load_from_memory(&cover_data).expect("Failed to load temp_icon.png");
+        let cover_rgba = cover_image.to_rgba8();
+        let (cover_w, cover_h) = cover_rgba.dimensions();
+
+        let cover_size = wgpu::Extent3d {
+            width: cover_w,
+            height: cover_h,
+            depth_or_array_layers: 1,
+        };
+        let cover_texture = device.create_texture(&wgpu::TextureDescriptor {
+            size: cover_size,
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8UnormSrgb,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            label: Some("Cover Texture"),
+            view_formats: &[],
+        });
+        queue.write_texture(
+            wgpu::ImageCopyTexture {
+                texture: &cover_texture,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+            },
+            &cover_rgba,
+            wgpu::ImageDataLayout {
+                offset: 0,
+                bytes_per_row: Some(4 * cover_w),
+                rows_per_image: Some(cover_h),
+            },
+            cover_size,
+        );
+        let cover_texture_view = cover_texture.create_view(&wgpu::TextureViewDescriptor::default());
+
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout: &bg_layout,
             entries: &[
@@ -278,6 +379,14 @@ impl RenderPipeline {
                 wgpu::BindGroupEntry {
                     binding: 3,
                     resource: wgpu::BindingResource::TextureView(&blurred_view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 4,
+                    resource: wgpu::BindingResource::TextureView(&icon_texture_view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 5,
+                    resource: wgpu::BindingResource::TextureView(&cover_texture_view),
                 },
             ],
             label: Some("Bind Group"),
@@ -414,6 +523,10 @@ impl RenderPipeline {
             blurred_texture_view: blurred_view,
             temp_texture,
             temp_texture_view: temp_view,
+            icon_texture,
+            icon_texture_view,
+            cover_texture,
+            cover_texture_view,
         }
     }
 
@@ -509,6 +622,30 @@ impl RenderPipeline {
                                 },
                                 count: None,
                             },
+                            wgpu::BindGroupLayoutEntry {
+                                binding: 4,
+                                visibility: wgpu::ShaderStages::FRAGMENT,
+                                ty: wgpu::BindingType::Texture {
+                                    sample_type: wgpu::TextureSampleType::Float {
+                                        filterable: true,
+                                    },
+                                    view_dimension: wgpu::TextureViewDimension::D2,
+                                    multisampled: false,
+                                },
+                                count: None,
+                            },
+                            wgpu::BindGroupLayoutEntry {
+                                binding: 5,
+                                visibility: wgpu::ShaderStages::FRAGMENT,
+                                ty: wgpu::BindingType::Texture {
+                                    sample_type: wgpu::TextureSampleType::Float {
+                                        filterable: true,
+                                    },
+                                    view_dimension: wgpu::TextureViewDimension::D2,
+                                    multisampled: false,
+                                },
+                                count: None,
+                            },
                         ],
                         label: Some("Bind Group Layout"),
                     });
@@ -532,317 +669,20 @@ impl RenderPipeline {
                         binding: 3,
                         resource: wgpu::BindingResource::TextureView(&self.blurred_texture_view),
                     },
+                    wgpu::BindGroupEntry {
+                        binding: 4,
+                        resource: wgpu::BindingResource::TextureView(&self.icon_texture_view),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 5,
+                        resource: wgpu::BindingResource::TextureView(&self.cover_texture_view),
+                    },
                 ],
                 label: Some("Bind Group"),
             });
         }
     }
 
-    pub fn render_text_scaled(
-        &mut self,
-        text: &str,
-        mut x: f32,
-        y: f32,
-        scale: f32,
-        color: [f32; 4],
-        vertices: &mut Vec<Vertex>,
-        scale_factor: f32,
-    ) {
-        let actual_scale = scale * scale_factor;
-        for ch in text.chars() {
-            let glyph = self.font_atlas.get_glyph(ch as u32);
-            let (gx, gy, gw, gh) = (glyph.rect[0], glyph.rect[1], glyph.rect[2], glyph.rect[3]);
-            let atlas_w = self.font_atlas.width as f32;
-            let atlas_h = self.font_atlas.height as f32;
-            let u0 = gx as f32 / atlas_w;
-            let v0 = gy as f32 / atlas_h;
-            let u1 = (gx + gw) as f32 / atlas_w;
-            let v1 = (gy + gh) as f32 / atlas_h;
-            let px = x + glyph.offset[0] * actual_scale;
-            let py = y + glyph.offset[1] * actual_scale;
-            let gw_f = gw as f32 * actual_scale;
-            let gh_f = gh as f32 * actual_scale;
-
-            vertices.extend([
-                Vertex {
-                    position: [px, py],
-                    tex_coord: [u0, v0],
-                    screen_uv: [0.0, 0.0],
-                    color,
-                    quad_size: [gw_f, gh_f],
-                },
-                Vertex {
-                    position: [px + gw_f, py],
-                    tex_coord: [u1, v0],
-                    screen_uv: [0.0, 0.0],
-                    color,
-                    quad_size: [gw_f, gh_f],
-                },
-                Vertex {
-                    position: [px + gw_f, py + gh_f],
-                    tex_coord: [u1, v1],
-                    screen_uv: [0.0, 0.0],
-                    color,
-                    quad_size: [gw_f, gh_f],
-                },
-                Vertex {
-                    position: [px, py],
-                    tex_coord: [u0, v0],
-                    screen_uv: [0.0, 0.0],
-                    color,
-                    quad_size: [gw_f, gh_f],
-                },
-                Vertex {
-                    position: [px + gw_f, py + gh_f],
-                    tex_coord: [u1, v1],
-                    screen_uv: [0.0, 0.0],
-                    color,
-                    quad_size: [gw_f, gh_f],
-                },
-                Vertex {
-                    position: [px, py + gh_f],
-                    tex_coord: [u0, v1],
-                    screen_uv: [0.0, 0.0],
-                    color,
-                    quad_size: [gw_f, gh_f],
-                },
-            ]);
-
-            x += glyph.advance * actual_scale;
-        }
-    }
-
-    pub fn render_text(
-        &mut self,
-        text: &str,
-        x: f32,
-        y: f32,
-        color: [f32; 4],
-        vertices: &mut Vec<Vertex>,
-    ) {
-        self.render_text_scaled(text, x, y, 1.0, color, vertices, 1.0);
-    }
-
-    pub fn measure_text(&mut self, text: &str) -> f32 {
-        let mut width = 0.0;
-        let scale = 1.0;
-        for ch in text.chars() {
-            let g = self.font_atlas.get_glyph(ch as u32);
-            width += g.advance * scale;
-        }
-        width
-    }
-
-    fn render_card(
-        &mut self,
-        verts: &mut Vec<Vertex>,
-        x: f32,
-        y: f32,
-        w: f32,
-        h: f32,
-        win_w: f32,
-        win_h: f32,
-        tint: [f32; 3],
-        strength: f32,
-        title: &str,
-        subtitle: Option<&str>,
-        _icon: &str,
-        scale_factor: f32,
-    ) {
-        verts.extend(build_shadow_quad(x, y, w, h, 8.0 * scale_factor, 0.18));
-        verts.extend(build_glass_quad(x, y, w, h, win_w, win_h, tint, strength));
-
-        // Render title
-        let text_color = [1.0, 1.0, 1.0, 1.0];
-        let mut text_y = y + (h - 24.0 * scale_factor) * 0.5; // Default center
-        let text_x_offset = 65.0 * scale_factor;
-
-        if let Some(sub) = subtitle {
-            text_y = y + 25.0 * scale_factor;
-            self.render_text_scaled(
-                title,
-                x + text_x_offset,
-                text_y,
-                0.45,
-                text_color,
-                verts,
-                scale_factor,
-            );
-            self.render_text_scaled(
-                sub,
-                x + text_x_offset,
-                text_y + 28.0 * scale_factor,
-                0.35,
-                [1.0, 1.0, 1.0, 0.5],
-                verts,
-                scale_factor,
-            );
-        } else {
-            // For small cards (quick grid)
-            let tx = x + text_x_offset; // Margin for icon
-            self.render_text_scaled(
-                title,
-                tx,
-                text_y + 8.0 * scale_factor,
-                0.4,
-                text_color,
-                verts,
-                scale_factor,
-            );
-        }
-
-        // Render icon placeholder (a simple glass box for now)
-        verts.extend(build_glass_quad(
-            x,
-            y,
-            h,
-            h,
-            win_w,
-            win_h,
-            tint,
-            strength * 1.5,
-        ));
-    }
-
-    pub fn build_frame_ecs(
-        &mut self,
-        world: &mut World,
-        input: &InputState,
-        fps_text: &str,
-        win_w: f32,
-        win_h: f32,
-        scale_factor: f32,
-    ) {
-        let mut verts: Vec<Vertex> = Vec::new();
-        let scroll_y = input.scroll.render_offset;
-
-        verts.extend(build_background_quad(win_w, win_h));
-
-        // Render Header
-        for eid in world.query_with_mut::<UIHeader>() {
-            if let (Some(header), Some(pos)) = (
-                world.get_component::<UIHeader>(eid),
-                world.get_component::<Position>(eid),
-            ) {
-                let sy = pos.y - scroll_y;
-                if sy > -100.0 && sy < win_h + 100.0 {
-                    self.render_text_scaled(
-                        &header.title,
-                        pos.x,
-                        sy,
-                        0.8,
-                        [1.0, 1.0, 1.0, 1.0],
-                        &mut verts,
-                        scale_factor,
-                    );
-                    self.render_text_scaled(
-                        &header.greeting,
-                        pos.x,
-                        sy + 60.0 * scale_factor,
-                        0.7,
-                        [1.0, 1.0, 1.0, 1.0],
-                        &mut verts,
-                        scale_factor,
-                    );
-                }
-            }
-        }
-
-        // Render Sections (Titles)
-        let mut rendered_sections = std::collections::HashSet::new();
-        let entities: Vec<u32> = world.entities.all_entities().iter().map(|e| e.id).collect();
-        for eid in entities {
-            if let Some(section) = world.get_component::<UISection>(eid) {
-                if section.title == "Recommended" && !rendered_sections.contains(&section.title) {
-                    if let Some(pos) = world.get_component::<Position>(eid) {
-                        let sy = pos.y - scroll_y - 25.0 * scale_factor;
-                        if sy > -50.0 && sy < win_h + 50.0 {
-                            self.render_text_scaled(
-                                "Рекомендуемые",
-                                18.0 * scale_factor,
-                                sy,
-                                0.6,
-                                [1.0, 1.0, 1.0, 1.0],
-                                &mut verts,
-                                scale_factor,
-                            );
-                        }
-                        rendered_sections.insert(section.title.clone());
-                    }
-                }
-                if section.title == "NewRelease" && !rendered_sections.contains(&section.title) {
-                    if let Some(pos) = world.get_component::<Position>(eid) {
-                        let sy = pos.y - scroll_y - 25.0 * scale_factor;
-                        if sy > -50.0 && sy < win_h + 50.0 {
-                            self.render_text_scaled(
-                                "Новый релиз исполнителя",
-                                pos.x,
-                                sy,
-                                0.35,
-                                [1.0, 1.0, 1.0, 0.5],
-                                &mut verts,
-                                scale_factor,
-                            );
-                        }
-                        rendered_sections.insert(section.title.clone());
-                    }
-                }
-            }
-
-            // Render Cards
-            if let Some(card) = world.get_component::<UICard>(eid) {
-                if let (Some(pos), Some(size)) = (
-                    world.get_component::<Position>(eid),
-                    world.get_component::<Size>(eid),
-                ) {
-                    let sy = pos.y - scroll_y;
-                    // Cull off-screen elements
-                    if sy > -size.height - 20.0 && sy < win_h + 20.0 && pos.x < win_w {
-                        self.render_card(
-                            &mut verts,
-                            pos.x,
-                            sy,
-                            size.width,
-                            size.height,
-                            win_w,
-                            win_h,
-                            card.tint,
-                            if card.is_hovered { 1.1 } else { 0.88 },
-                            &card.title,
-                            card.subtitle.as_deref(),
-                            &card.icon,
-                            scale_factor,
-                        );
-                    }
-                }
-            }
-        }
-
-        // FPS
-        self.render_text_scaled(
-            fps_text,
-            win_w - 70.0 * scale_factor,
-            20.0 * scale_factor,
-            0.4,
-            [0.55, 0.85, 1.0, 0.85],
-            &mut verts,
-            scale_factor,
-        );
-
-        self.vertex_count = verts.len().min(self.max_vertices) as u32;
-        let vertex_count = self.vertex_count as usize;
-
-        for vertex in verts.iter_mut().take(vertex_count) {
-            vertex.position[0] = (vertex.position[0] / win_w) * 2.0 - 1.0;
-            vertex.position[1] = 1.0 - (vertex.position[1] / win_h) * 2.0;
-        }
-
-        self.queue.write_buffer(
-            &self.vertex_buffer,
-            0,
-            bytemuck::cast_slice(&verts[..vertex_count]),
-        );
-    }
 
     pub fn draw(&mut self) {
         let frame = match self.surface.get_current_texture() {
