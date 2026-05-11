@@ -3,3 +3,6 @@
 **/*.rs.bk
 *.apk
 .DS_Store
+background.mp4
+background_h264.mp4
+background1.png

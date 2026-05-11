@@ -1,0 +1,574 @@
+--- Starting Build and Run --- 
+0. Ensuring target... 
+info: component rust-std for target aarch64-linux-android is up to date
+1. Building and Packaging APK... 
+Using package `Liquify` in `C:\Users\user\Documents\testlocal\Cargo.toml`
+   Compiling Liquify v0.5.0 (C:\Users\user\Documents\testlocal)
+warning: unused imports: `EntityId`, `Entity`, and `SystemRegistry`
+ --> src\ecs\mod.rs:7:20
+  |
+7 | pub use entities::{Entity, EntityId, SystemRegistry};
+  |                    ^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `manager::EntityManager`
+ --> src\ecs\mod.rs:8:9
+  |
+8 | pub use manager::EntityManager;
+  |         ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::ecs::components::*`
+ --> src\render\pipeline.rs:1:5
+  |
+1 | use crate::ecs::components::*;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::ecs::world::World`
+ --> src\render\pipeline.rs:2:5
+  |
+2 | use crate::ecs::world::World;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::input::InputState`
+ --> src\render\pipeline.rs:4:5
+  |
+4 | use crate::input::InputState;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `build_background_quad`, `build_glass_quad`, and `build_shadow_quad`
+ --> src\render\pipeline.rs:5:39
+  |
+5 | use crate::render::geometry::{Vertex, build_background_quad, build_glass_quad, build_shadow_quad};
+  |                                       ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Vertex` and `build_quad`
+ --> src\render\mod.rs:5:20
+  |
+5 | pub use geometry::{Vertex, build_quad};
+  |                    ^^^^^^  ^^^^^^^^^^
+
+warning: unused import: `libc`
+ --> src\video\android_hw.rs:1:5
+  |
+1 | use libc;
+  |     ^^^^
+
+warning: unused import: `AImageReader_acquireLatestImage`
+  --> src\video\android_hw.rs:17:78
+   |
+17 |     AImageReader_new, AImageReader_getWindow, AImageReader_acquireNextImage, AImageReader_acquireLatestImage,
+   |                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> src\render\pipeline.rs:261:63
+    |
+261 |         let (bg_rgba, bg_w, bg_h, video_player) = if let Some(mut player) = VideoPlayer::new(video_path) {
+    |                                                               ----^^^^^^
+    |                                                               |
+    |                                                               help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `device`
+   --> src\font\mod.rs:127:59
+    |
+127 |     pub fn upload_texture(&self, texture: &wgpu::Texture, device: &wgpu::Device, queue: &wgpu::Queue) {
+    |                                                           ^^^^^^ help: if this is intentional, prefix it with an underscore: `_device`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `fps_text`
+  --> src\render\draw.rs:88:78
+   |
+88 | ...ld, input: &InputState, fps_text: &str, win_w: f32, win_h: f32, scale_factor: f32) {
+   |                            ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_fps_text`
+
+warning[E0133]: call to unsafe function `libc::dlopen` is unsafe and requires unsafe block
+  --> src\video\vulkan_import.rs:15:15
+   |
+15 |       let lib = libc::dlopen(
+   |  _______________^
+16 | |         c"libvulkan.so".as_ptr(),
+17 | |         libc::RTLD_NOW | libc::RTLD_NOLOAD,
+18 | |     );
+   | |_____^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+  --> src\video\vulkan_import.rs:8:1
+   |
+ 8 | / unsafe fn load_get_ahb_props_fn() -> Option<
+ 9 | |     extern "system" fn(
+10 | |         vk::Device,
+11 | |         *const std::ffi::c_void,
+12 | |         *mut vk::AndroidHardwareBufferPropertiesANDROID,
+13 | |     ) -> vk::Result,
+14 | | > {
+   | |_^
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: `#[warn(unsafe_op_in_unsafe_fn)]` (part of `#[warn(rust_2024_compatibility)]`) on by default
+
+warning[E0133]: call to unsafe function `libc::dlsym` is unsafe and requires unsafe block
+  --> src\video\vulkan_import.rs:24:15
+   |
+24 |       let sym = libc::dlsym(
+   |  _______________^
+25 | |         lib,
+26 | |         c"vkGetAndroidHardwareBufferPropertiesANDROID".as_ptr(),
+27 | |     );
+   | |_____^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `libc::dlclose` is unsafe and requires unsafe block
+  --> src\video\vulkan_import.rs:28:5
+   |
+28 |     libc::dlclose(lib);
+   |     ^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `std::intrinsics::transmute` is unsafe and requires unsafe block
+  --> src\video\vulkan_import.rs:35:10
+   |
+35 |     Some(std::mem::transmute(sym))
+   |          ^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `wgpu::Device::as_hal` is unsafe and requires unsafe block
+   --> src\video\vulkan_import.rs:45:5
+    |
+ 45 | /     device
+ 46 | |         .as_hal::<hal::api::Vulkan, _, Option<wgpu::Texture>>(|hal_device| {
+ 47 | |             let hal_device = match hal_device {
+ 48 | |                 Some(d) => d,
+...   |
+185 | |             Some(device.create_texture_from_hal::<hal::api::Vulkan>(hal_texture, &texture_desc))
+186 | |         })
+    | |__________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\video\vulkan_import.rs:38:1
+    |
+ 38 | / pub unsafe fn import_android_buffer(
+ 39 | |     device: &wgpu::Device,
+ 40 | |     _queue: &wgpu::Queue,
+ 41 | |     buffer_ptr: *mut std::ffi::c_void, // AHardwareBuffer*
+ 42 | |     width: u32,
+ 43 | |     height: u32,
+ 44 | | ) -> Option<wgpu::Texture> {
+    | |__________________________^
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `video::vulkan_import::load_get_ahb_props_fn` is unsafe and requires unsafe block
+  --> src\video\vulkan_import.rs:57:42
+   |
+57 |             let vk_get_ahb_props = match load_get_ahb_props_fn() {
+   |                                          ^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::create_image` is unsafe and requires unsafe block
+   --> src\video\vulkan_import.rs:113:34
+    |
+113 |             let vk_image = match raw_device.create_image(&image_create_info, None) {
+    |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::allocate_memory` is unsafe and requires unsafe block
+   --> src\video\vulkan_import.rs:130:32
+    |
+130 |             let memory = match raw_device.allocate_memory(&alloc_info, None) {
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_image` is unsafe and requires unsafe block
+   --> src\video\vulkan_import.rs:133:21
+    |
+133 |                     raw_device.destroy_image(vk_image, None);
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::bind_image_memory` is unsafe and requires unsafe block
+   --> src\video\vulkan_import.rs:139:29
+    |
+139 |             if let Err(e) = raw_device.bind_image_memory(vk_image, memory, 0) {
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::free_memory` is unsafe and requires unsafe block
+   --> src\video\vulkan_import.rs:140:17
+    |
+140 |                 raw_device.free_memory(memory, None);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_image` is unsafe and requires unsafe block
+   --> src\video\vulkan_import.rs:141:17
+    |
+141 |                 raw_device.destroy_image(vk_image, None);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `wgpu_hal::vulkan::device::<impl wgpu_hal::vulkan::Device>::texture_from_raw` is unsafe and requires unsafe block
+   --> src\video\vulkan_import.rs:163:31
+    |
+163 |               let hal_texture = wgpu_hal::vulkan::Device::texture_from_raw(
+    |  _______________________________^
+164 | |                 vk_image,
+165 | |                 &hal_desc,
+166 | |                 Some(Box::new(memory)),
+167 | |             );
+    | |_____________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `wgpu::Device::create_texture_from_hal` is unsafe and requires unsafe block
+   --> src\video\vulkan_import.rs:185:18
+    |
+185 |             Some(device.create_texture_from_hal::<hal::api::Vulkan>(hal_texture, &texture_desc))
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning: type `ManagedBuffer` is more private than the item `render::pipeline::RenderPipeline::text_buffer_pool`
+  --> src\render\pipeline.rs:85:5
+   |
+85 |     pub text_buffer_pool: Vec<ManagedBuffer>,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ field `render::pipeline::RenderPipeline::text_buffer_pool` is reachable at visibility `pub(crate)`
+   |
+note: but type `ManagedBuffer` is only usable at visibility `pub(self)`
+  --> src\render\pipeline.rs:37:1
+   |
+37 | struct ManagedBuffer {
+   | ^^^^^^^^^^^^^^^^^^^^
+   = note: `#[warn(private_interfaces)]` on by default
+
+warning: methods `has_component` and `remove_component` are never used
+  --> src\ecs\entities.rs:32:12
+   |
+12 | impl Entity {
+   | ----------- methods in this implementation
+...
+32 |     pub fn has_component<T: 'static>(&self) -> bool {
+   |            ^^^^^^^^^^^^^
+...
+36 |     pub fn remove_component<T: 'static>(&mut self) -> Option<T> {
+   |            ^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: type alias `SystemFn` is never used
+  --> src\ecs\entities.rs:42:10
+   |
+42 | pub type SystemFn = Box<dyn FnMut(&mut World)>;
+   |          ^^^^^^^^
+
+warning: struct `SystemRegistry` is never constructed
+  --> src\ecs\entities.rs:44:12
+   |
+44 | pub struct SystemRegistry {
+   |            ^^^^^^^^^^^^^^
+
+warning: associated items `new`, `register`, `run_all`, and `run_named` are never used
+  --> src\ecs\entities.rs:49:12
+   |
+48 | impl SystemRegistry {
+   | ------------------- associated items in this implementation
+49 |     pub fn new() -> Self {
+   |            ^^^
+...
+55 |     pub fn register<F: FnMut(&mut World) + 'static>(&mut self, name: &str, system: F) {
+   |            ^^^^^^^^
+...
+59 |     pub fn run_all(&mut self, world: &mut World) {
+   |            ^^^^^^^
+...
+65 |     pub fn run_named(&mut self, world: &mut World, name: &str) -> bool {
+   |            ^^^^^^^^^
+
+warning: multiple methods are never used
+  --> src\ecs\manager.rs:32:12
+   |
+ 9 | impl EntityManager {
+   | ------------------ methods in this implementation
+...
+32 |     pub fn remove_entity(&mut self, id: EntityId) -> Option<Entity> {
+   |            ^^^^^^^^^^^^^
+...
+36 |     pub fn has_entity(&self, id: EntityId) -> bool {
+   |            ^^^^^^^^^^
+...
+40 |     pub fn with_components<T: 'static>(&self, required: &[std::any::TypeId]) -> Vec<&Entity> {
+   |            ^^^^^^^^^^^^^^^
+...
+46 |     pub fn with_components_mut<T: 'static>(&mut self, required: &[std::any::TypeId]) -> Vec<&mut Entity> {
+   |            ^^^^^^^^^^^^^^^^^^^
+...
+56 |     pub fn all_entities_mut(&mut self) -> Vec<&mut Entity> {
+   |            ^^^^^^^^^^^^^^^^
+...
+60 |     pub fn len(&self) -> usize {
+   |            ^^^
+...
+64 |     pub fn is_empty(&self) -> bool {
+   |            ^^^^^^^^
+
+warning: methods `get_entity`, `get_entity_mut`, `query_with`, and `query_with_two` are never used
+  --> src\ecs\world.rs:20:12
+   |
+ 9 | impl World {
+   | ---------- methods in this implementation
+...
+20 |     pub fn get_entity(&self, id: EntityId) -> Option<&Entity> {
+   |            ^^^^^^^^^^
+...
+24 |     pub fn get_entity_mut(&mut self, id: EntityId) -> Option<&mut Entity> {
+   |            ^^^^^^^^^^^^^^
+...
+45 |     pub fn query_with<T: 'static>(&self) -> Vec<(&Entity, &T)> {
+   |            ^^^^^^^^^^
+...
+58 |     pub fn query_with_two<T: 'static, U: 'static>(&self) -> Vec<(&Entity, &T, &U)> {
+   |            ^^^^^^^^^^^^^^
+
+warning: struct `Color` is never constructed
+  --> src\ecs\components.rs:16:12
+   |
+16 | pub struct Color {
+   |            ^^^^^
+
+warning: method `to_array` is never used
+  --> src\ecs\components.rs:24:12
+   |
+23 | impl Color {
+   | ---------- method in this implementation
+24 |     pub fn to_array(self) -> [f32; 4] {
+   |            ^^^^^^^^
+
+warning: field `icon` is never read
+  --> src\ecs\components.rs:33:9
+   |
+30 | pub struct UICard {
+   |            ------ field in this struct
+...
+33 |     pub icon: String,
+   |         ^^^^
+   |
+   = note: `UICard` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+
+warning: field `visible` is never read
+  --> src\ecs\components.rs:51:9
+   |
+50 | pub struct Renderable {
+   |            ---------- field in this struct
+51 |     pub visible: bool,
+   |         ^^^^^^^
+   |
+   = note: `Renderable` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+
+warning: field `icon` is never read
+  --> src\ecs\components.rs:66:9
+   |
+63 | pub struct UINavButton {
+   |            ----------- field in this struct
+...
+66 |     pub icon: String,
+   |         ^^^^
+   |
+   = note: `UINavButton` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+
+warning: struct `UIImage` is never constructed
+  --> src\ecs\components.rs:71:12
+   |
+71 | pub struct UIImage {
+   |            ^^^^^^^
+
+warning: function `type_id_of` is never used
+  --> src\ecs\components.rs:75:8
+   |
+75 | pub fn type_id_of<T: 'static>() -> TypeId {
+   |        ^^^^^^^^^^
+
+warning: struct `Calculator` is never constructed
+ --> src\calculator\mod.rs:3:12
+  |
+3 | pub struct Calculator {
+  |            ^^^^^^^^^^
+
+warning: associated function `new` is never used
+ --> src\calculator\mod.rs:8:12
+  |
+7 | impl Calculator {
+  | --------------- associated function in this implementation
+8 |     pub fn new() -> Self {
+  |            ^^^
+
+warning: fields `gpu_index` and `advance` are never read
+  --> src\font\mod.rs:16:9
+   |
+15 | pub struct AtlasGlyph {
+   |            ---------- fields in this struct
+16 |     pub gpu_index: u32,
+   |         ^^^^^^^^^
+17 |     pub advance: f32,
+   |         ^^^^^^^
+
+warning: fields `font`, `glyphs`, `char_to_glyph`, and `line_height` are never read
+  --> src\font\mod.rs:21:9
+   |
+20 | pub struct FontAtlas {
+   |            --------- fields in this struct
+21 |     pub font: Font,
+   |         ^^^^
+...
+25 |     pub glyphs: Vec<GPUChar>,
+   |         ^^^^^^
+26 |     pub char_to_glyph: HashMap<u32, AtlasGlyph>,
+   |         ^^^^^^^^^^^^^
+27 |     pub line_height: f32,
+   |         ^^^^^^^^^^^
+
+warning: method `get_glyph` is never used
+   --> src\font\mod.rs:105:12
+    |
+ 30 | impl FontAtlas {
+    | -------------- method in this implementation
+...
+105 |     pub fn get_glyph(&self, codepoint: u32) -> Option<&AtlasGlyph> {
+    |            ^^^^^^^^^
+
+warning: function `build_quad` is never used
+  --> src\render\geometry.rs:35:8
+   |
+35 | pub fn build_quad(x: f32, y: f32, w: f32, h: f32, color: [f32; 4], radii: [f32; 4]) -> [Vertex; 6] {
+   |        ^^^^^^^^^^
+
+warning: multiple fields are never read
+  --> src\render\pipeline.rs:50:9
+   |
+43 | pub struct RenderPipeline {
+   |            -------------- fields in this struct
+...
+50 |     pub font_texture: wgpu::Texture,
+   |         ^^^^^^^^^^^^
+51 |     pub texture_view: wgpu::TextureView,
+   |         ^^^^^^^^^^^^
+...
+57 |     pub font_atlas: FontAtlas,
+   |         ^^^^^^^^^^
+58 |     pub max_vertices: usize,
+   |         ^^^^^^^^^^^^
+...
+69 |     pub icon_texture: wgpu::Texture,
+   |         ^^^^^^^^^^^^
+...
+72 |     pub cover_texture: wgpu::Texture,
+   |         ^^^^^^^^^^^^^
+...
+88 |     pub blur_bg_layout: wgpu::BindGroupLayout,
+   |         ^^^^^^^^^^^^^^
+
+warning: variant `Rgba` is never constructed
+  --> src\video\mod.rs:11:5
+   |
+10 | pub enum VideoFrame {
+   |          ---------- variant in this enum
+11 |     Rgba(Vec<u8>, u32, u32),
+   |     ^^^^
+
+warning: method `duration` is never used
+  --> src\video\mod.rs:18:8
+   |
+16 | pub trait VideoBackend {
+   |           ------------ method in this trait
+17 |     fn next_frame(&mut self) -> Option<VideoFrame>;
+18 |     fn duration(&self) -> Duration;
+   |        ^^^^^^^^
+
+warning: method `duration` is never used
+  --> src\video\mod.rs:42:12
+   |
+26 | impl VideoPlayer {
+   | ---------------- method in this implementation
+...
+42 |     pub fn duration(&self) -> Duration {
+   |            ^^^^^^^^
+
+warning: field `duration` is never read
+  --> src\video\android_hw.rs:29:5
+   |
+23 | pub struct AndroidHwBackend {
+   |            ---------------- field in this struct
+...
+29 |     duration: Duration,
+   |     ^^^^^^^^
+
+warning: `extern` fn uses type `AndroidApp`, which is not FFI-safe
+   --> src\lib.rs:184:37
+    |
+184 | pub extern "C" fn android_main(app: android_activity::AndroidApp) {
+    |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not FFI-safe
+    |
+    = help: consider adding a `#[repr(C)]` or `#[repr(transparent)]` attribute to this struct
+    = note: this struct has unspecified layout
+    = note: `#[warn(improper_ctypes_definitions)]` on by default
+
+warning: calls to `std::mem::drop` with a value that implements `Copy` does nothing
+  --> src\video\vulkan_import.rs:76:13
+   |
+76 |             drop(props); // Освобождаем мутабельную ссылку на format_props
+   |             ^^^^^-----^
+   |                  |
+   |                  argument has type `AndroidHardwareBufferPropertiesANDROID<'_>`
+   |
+   = note: `#[warn(dropping_copy_types)]` on by default
+help: use `let _ = ...` to ignore the expression or result
+   |
+76 -             drop(props); // Освобождаем мутабельную ссылку на format_props
+76 +             let _ = props; // Освобождаем мутабельную ссылку на format_props
+   |
+
+For more information about this error, try `rustc --explain E0133`.
+warning: `Liquify` (lib) generated 53 warnings (run `cargo fix --lib -p Liquify` to apply 14 suggestions)
+    Finished `release` profile [optimized] target(s) in 18.62s
+ 'lib/arm64-v8a/libliquify.so'...
+ 'lib/arm64-v8a/libnativewindow.so'...
+Verifying alignment of C:\Users\user\Documents\testlocal\target\release\apk\liquify.apk (4)...
+      49 AndroidManifest.xml (OK - compressed)
+     856 assets/background.mp4 (OK)
+134660876 assets/font_atlas.json (OK - compressed)
+134690156 assets/font_atlas.png (OK)
+135503428 assets/icons_sdf.png (OK)
+135555224 assets/temp_icon.png (OK)
+135968178 lib/arm64-v8a/libliquify.so (OK - compressed)
+139624214 lib/arm64-v8a/libnativewindow.so (OK - compressed)
+Verification successful
+Signing `C:\Users\user\Documents\testlocal\target\release\apk\liquify.apk` with keystore `C:/Users/user/.android/debug.keystore`
+2. Installing APK... 
+Performing Incremental Install
+Performing Streamed Install
+Success
+3. Starting application... 
+Starting: Intent { cmp=com.test.liquify/android.app.NativeActivity }

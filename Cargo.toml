@@ -4,18 +4,37 @@ version = "0.5.0"
 edition = "2024"
 
 [lib]
-name = "main"
+name = "liquify"
 crate-type = ["cdylib"]
-path = "src/main.rs"
+path = "src/lib.rs"
 
 [dependencies]
-wgpu = { version = "0.20", default-features = false, features = ["wgsl"] }
-winit = { version = "0.30", default-features = false, features = ["rwh_06", "android-native-activity"] }
+wgpu = { version = "22.1.0", default-features = false, features = ["wgsl"] }
+winit = { version = "0.30.5", default-features = false, features = ["rwh_06", "android-native-activity"] }
 fontdue = "0.8"
 bytemuck = { version = "1.15", features = ["derive"] }
 pollster = "0.3"
 image = { version = "0.25", default-features = false, features = ["png"] }
 jni = "0.21"
+glyphon = "0.6.0"
+raw-window-handle = "0.6"
+
+[target.'cfg(not(target_os = "android"))'.dependencies]
+openh264 = "0.6"
+mp4 = "0.14"
+
+[target.'cfg(target_os = "android")'.dependencies]
+ndk = { version = "0.9", features = ["media", "nativewindow", "api-level-26"] }
+ndk-sys = { version = "0.6", features = ["media"] }
+jni = "0.21"
+ndk-context = "0.1"
+libc = "0.2"
+android_logger = "0.13"
+log = "0.4"
+ash = "0.38"
+wgpu = { version = "22.1", features = ["wgc"] }
+wgpu-hal = "22"
+android-activity = { version = "0.6", features = ["native-activity"] }
 
 [profile.release]
 codegen-units = 1
@@ -27,6 +46,7 @@ strip = "symbols"
 [package.metadata.android]
 package = "com.test.liquify"
 label = "Liquify"
+assets = "assets"
 build_targets = ["aarch64-linux-android"]
 min_sdk_version = 26
 target_sdk_version = 35

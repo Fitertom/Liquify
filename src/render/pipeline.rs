@@ -3,6 +3,11 @@ use crate::ecs::world::World;
 use crate::font::FontAtlas;
 use crate::input::InputState;
 use crate::render::geometry::{Vertex, build_background_quad, build_glass_quad, build_shadow_quad};
+use crate::video::{VideoPlayer, VideoFrame};
+use glyphon::{
+    Attrs, Family, FontSystem, Metrics, Resolution, Shaping, SwashCache, TextAtlas, TextBounds,
+    TextRenderer, Viewport,
+};
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
@@ -10,6 +15,29 @@ struct BlurParams {
     texel_size: [f32; 2],
     radius: f32,
     direction: f32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct TextInstance {
+    pub x: f32,
+    pub y: f32,
+    pub glyph_index: f32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct TextParams {
+    pub transform: [f32; 16],
+    pub color: [f32; 4],
+    pub scale: f32,
+    pub _padding: [f32; 3],
+}
+
+struct ManagedBuffer {
+    buffer: glyphon::Buffer,
+    last_text: String,
+    last_scale: f32,
 }
 
 pub struct RenderPipeline {
@@ -28,6 +56,7 @@ pub struct RenderPipeline {
     pub vertex_count: u32,
     pub font_atlas: FontAtlas,
     pub max_vertices: usize,
+    pub scale_factor: f32,
 
     pub blur_pipeline: wgpu::RenderPipeline,
     pub blur_params_buffer_h: wgpu::Buffer,
@@ -42,17 +71,38 @@ pub struct RenderPipeline {
 
     pub cover_texture: wgpu::Texture,
     pub cover_texture_view: wgpu::TextureView,
+
+    pub vector_pipeline: wgpu::RenderPipeline,
+    pub vector_vertex_buffer: wgpu::Buffer,
+    pub vector_vertex_count: u32,
+
+    // --- GLYPHON ---
+    pub font_system: FontSystem,
+    pub swash_cache: SwashCache,
+    pub text_atlas: TextAtlas,
+    pub text_renderer: TextRenderer,
+    pub text_viewport: Viewport,
+    pub text_buffer_pool: Vec<ManagedBuffer>,
+    pub text_requests: Vec<(String, f32, f32, f32, [f32; 4])>,
+
+    pub blur_bg_layout: wgpu::BindGroupLayout,
+    pub bg_layout: wgpu::BindGroupLayout,
+    pub video_player: Option<VideoPlayer>,
 }
 
 impl RenderPipeline {
-    pub async fn new(window: &winit::window::Window, font_data: &[u8]) -> Self {
+    pub async fn new(
+        window: &winit::window::Window,
+        font_data: &[u8],
+        atlas_png: &[u8],
+        atlas_json: &str,
+    ) -> Self {
         let size = window.inner_size();
+        let scale_factor = window.scale_factor() as f32;
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::VULKAN,
-            flags: wgpu::InstanceFlags::default(),
-            dx12_shader_compiler: Default::default(),
-            gles_minor_version: Default::default(),
+            ..Default::default()
         });
 
         let surface = instance.create_surface(window).unwrap();
@@ -61,11 +111,11 @@ impl RenderPipeline {
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::HighPerformance,
-                force_fallback_adapter: false,
                 compatible_surface: Some(&surface),
+                ..Default::default()
             })
             .await
-            .expect("Vulkan adapter not found. Install/update a GPU driver with Vulkan support.");
+            .expect("Failed to find adapter");
 
         let (device, queue) = adapter
             .request_device(
@@ -74,6 +124,7 @@ impl RenderPipeline {
                     required_features: wgpu::Features::empty(),
                     required_limits: wgpu::Limits::downlevel_webgl2_defaults()
                         .using_resolution(adapter.limits()),
+                    memory_hints: wgpu::MemoryHints::default(),
                 },
                 None,
             )
@@ -86,20 +137,12 @@ impl RenderPipeline {
             .first()
             .unwrap_or(&wgpu::TextureFormat::Bgra8UnormSrgb);
 
-        let present_mode = if caps.present_modes.contains(&wgpu::PresentMode::Immediate) {
-            wgpu::PresentMode::Immediate
-        } else if caps.present_modes.contains(&wgpu::PresentMode::Mailbox) {
-            wgpu::PresentMode::Mailbox
-        } else {
-            wgpu::PresentMode::Fifo
-        };
-
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: surface_format,
             width: size.width,
             height: size.height,
-            present_mode,
+            present_mode: wgpu::PresentMode::Mailbox,
             alpha_mode: caps.alpha_modes[0],
             view_formats: vec![],
             desired_maximum_frame_latency: 1,
@@ -160,16 +203,6 @@ impl RenderPipeline {
                     },
                     count: None,
                 },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 5,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                        view_dimension: wgpu::TextureViewDimension::D2,
-                        multisampled: false,
-                    },
-                    count: None,
-                },
             ],
             label: Some("Bind Group Layout"),
         });
@@ -186,7 +219,7 @@ impl RenderPipeline {
             vertex: wgpu::VertexState {
                 module: &shader,
                 entry_point: "vs_main",
-                buffers: &[Vertex::desc()],
+                buffers: &[crate::render::geometry::Vertex::desc()],
                 compilation_options: Default::default(),
             },
             fragment: Some(wgpu::FragmentState {
@@ -199,44 +232,49 @@ impl RenderPipeline {
                 })],
                 compilation_options: Default::default(),
             }),
-            primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleList,
-                strip_index_format: None,
-                front_face: wgpu::FrontFace::Ccw,
-                cull_mode: None,
-                polygon_mode: wgpu::PolygonMode::Fill,
-                unclipped_depth: false,
-                conservative: false,
-            },
+            primitive: wgpu::PrimitiveState::default(),
             depth_stencil: None,
-            multisample: wgpu::MultisampleState {
-                count: 1,
-                mask: !0,
-                alpha_to_coverage_enabled: false,
-            },
+            multisample: wgpu::MultisampleState::default(),
             multiview: None,
+            cache: None,
         });
 
-        let font_atlas = FontAtlas::new(font_data, 32, 512);
+        let font_atlas = FontAtlas::load(font_data, atlas_png, atlas_json);
         let font_texture = font_atlas.create_texture(&device);
         font_atlas.upload_texture(&font_texture, &device, &queue);
-
         let font_view = font_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
             address_mode_u: wgpu::AddressMode::ClampToEdge,
             address_mode_v: wgpu::AddressMode::ClampToEdge,
-            address_mode_w: wgpu::AddressMode::ClampToEdge,
             mag_filter: wgpu::FilterMode::Linear,
             min_filter: wgpu::FilterMode::Linear,
-            mipmap_filter: wgpu::FilterMode::Nearest,
             ..Default::default()
         });
 
-        let bg_data = include_bytes!("../../background.png");
-        let bg_image = image::load_from_memory(bg_data).expect("Failed to load background.png");
-        let bg_rgba = bg_image.to_rgba8();
-        let (bg_w, bg_h) = bg_rgba.dimensions();
+        println!("Rust: [CRITICAL_LOG] Entering RenderPipeline::new");
+
+        // На Android ищем видео в ассетах
+        let video_path = "background.mp4";
+        println!("Rust: [CRITICAL_LOG] Attempting to open video: {}", video_path);
+
+        let (bg_rgba, bg_w, bg_h, video_player) = if let Some(mut player) = VideoPlayer::new(video_path) {
+            println!("Rust: [CRITICAL_LOG] VideoPlayer initialized successfully for {}", video_path);
+            let (_bg_w, _bg_h) = player.dimensions();
+            (image::RgbaImage::new(1, 1), 1u32, 1u32, Some(player))
+        } else if let Ok(bg_data) = std::fs::read("background.png") {
+            println!("Loading background.png from filesystem...");
+            if let Ok(bg_image) = image::load_from_memory(&bg_data) {
+                let bg_rgba = bg_image.to_rgba8();
+                let (bg_w, bg_h) = bg_rgba.dimensions();
+                (bg_rgba, bg_w, bg_h, None)
+            } else {
+                (image::RgbaImage::new(1, 1), 1, 1, None)
+            }
+        } else {
+            println!("No background found, using black fallback.");
+            (image::RgbaImage::from_pixel(1, 1, image::Rgba([0, 0, 0, 255])), 1, 1, None)
+        };
 
         let bg_size = wgpu::Extent3d {
             width: bg_w,
@@ -286,46 +324,28 @@ impl RenderPipeline {
         });
         let blurred_view = blurred_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
-        let icon_data = std::fs::read("assets/icons_sdf.png").unwrap_or_else(|_| include_bytes!("../../assets/icons_sdf.png").to_vec());
-        let icon_image = image::load_from_memory(&icon_data).expect("Failed to load icons_sdf.png");
-        let icon_rgba = icon_image.to_rgba8();
-        let (icon_w, icon_h) = icon_rgba.dimensions();
-
-        let icon_size = wgpu::Extent3d {
-            width: icon_w,
-            height: icon_h,
-            depth_or_array_layers: 1,
-        };
+        // Icon texture (Stub - no longer used for atlas)
         let icon_texture = device.create_texture(&wgpu::TextureDescriptor {
-            size: icon_size,
+            size: wgpu::Extent3d {
+                width: 1,
+                height: 1,
+                depth_or_array_layers: 1,
+            },
             mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8UnormSrgb,
-            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
-            label: Some("Icon Texture"),
+            format: wgpu::TextureFormat::Rgba8Unorm,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING,
+            label: Some("Icon Texture Stub"),
             view_formats: &[],
         });
-        queue.write_texture(
-            wgpu::ImageCopyTexture {
-                texture: &icon_texture,
-                mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-                aspect: wgpu::TextureAspect::All,
-            },
-            &icon_rgba,
-            wgpu::ImageDataLayout {
-                offset: 0,
-                bytes_per_row: Some(4 * icon_w),
-                rows_per_image: Some(icon_h),
-            },
-            icon_size,
-        );
         let icon_texture_view = icon_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         // --- LOAD COVER TEXTURE (temp_icon.png) ---
-        let cover_data = std::fs::read("assets/temp_icon.png").unwrap_or_else(|_| include_bytes!("../../assets/temp_icon.png").to_vec());
-        let cover_image = image::load_from_memory(&cover_data).expect("Failed to load temp_icon.png");
+        let cover_data = std::fs::read("assets/temp_icon.png")
+            .unwrap_or_else(|_| include_bytes!("../../assets/temp_icon.png").to_vec());
+        let cover_image =
+            image::load_from_memory(&cover_data).expect("Failed to load temp_icon.png");
         let cover_rgba = cover_image.to_rgba8();
         let (cover_w, cover_h) = cover_rgba.dimensions();
 
@@ -370,22 +390,18 @@ impl RenderPipeline {
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
-                    resource: wgpu::BindingResource::TextureView(&font_view),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 2,
                     resource: wgpu::BindingResource::TextureView(&bg_view),
                 },
                 wgpu::BindGroupEntry {
-                    binding: 3,
+                    binding: 2,
                     resource: wgpu::BindingResource::TextureView(&blurred_view),
                 },
                 wgpu::BindGroupEntry {
-                    binding: 4,
+                    binding: 3,
                     resource: wgpu::BindingResource::TextureView(&icon_texture_view),
                 },
                 wgpu::BindGroupEntry {
-                    binding: 5,
+                    binding: 4,
                     resource: wgpu::BindingResource::TextureView(&cover_texture_view),
                 },
             ],
@@ -399,6 +415,60 @@ impl RenderPipeline {
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
+
+        // Vector Icons Pipeline
+        let vector_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("Vector Pipeline Layout"),
+                bind_group_layouts: &[&bg_layout], // Match main layout to avoid mismatch panic
+                push_constant_ranges: &[],
+            });
+
+        let vector_shader_source = include_str!("../../shaders/vector_icons.wgsl");
+        let vector_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("Vector Shader"),
+            source: wgpu::ShaderSource::Wgsl(vector_shader_source.into()),
+        });
+
+        let vector_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("Vector Pipeline"),
+            layout: Some(&vector_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &vector_shader,
+                entry_point: "vs_main",
+                buffers: &[Vertex::desc()],
+                compilation_options: Default::default(),
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &vector_shader,
+                entry_point: "fs_main",
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: config.format,
+                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState::default(),
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            multiview: None,
+            cache: None,
+        });
+
+        // --- GLYPHON INITIALIZATION ---
+        let mut font_system = FontSystem::new();
+        font_system.db_mut().load_font_data(font_data.to_vec());
+        let swash_cache = SwashCache::new();
+        let cache = glyphon::Cache::new(&device);
+        let mut text_atlas = TextAtlas::new(&device, &queue, &cache, config.format);
+        let text_renderer = TextRenderer::new(
+            &mut text_atlas,
+            &device,
+            wgpu::MultisampleState::default(),
+            None,
+        );
+        let text_viewport = Viewport::new(&device, &cache);
 
         // Blur Pipeline
         let blur_shader_source = include_str!("../../shaders/Sgausblur.wgsl");
@@ -468,6 +538,14 @@ impl RenderPipeline {
             depth_stencil: None,
             multisample: wgpu::MultisampleState::default(),
             multiview: None,
+            cache: None,
+        });
+
+        let vector_vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Vector Vertex Buffer"),
+            size: (max_vertices * std::mem::size_of::<Vertex>()) as u64,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
         });
 
         let blur_params_buffer_h = device.create_buffer(&wgpu::BufferDescriptor {
@@ -527,13 +605,31 @@ impl RenderPipeline {
             icon_texture_view,
             cover_texture,
             cover_texture_view,
+            vector_pipeline,
+            vector_vertex_buffer,
+            vector_vertex_count: 0,
+
+            // --- GLYPHON ---
+            font_system,
+            swash_cache,
+            text_atlas,
+            text_renderer,
+            text_viewport,
+            text_buffer_pool: Vec::new(),
+            text_requests: Vec::new(),
+
+            blur_bg_layout,
+            bg_layout,
+            scale_factor,
+            video_player,
         }
     }
 
-    pub fn resize(&mut self, width: u32, height: u32) {
+    pub fn resize(&mut self, width: u32, height: u32, scale_factor: f32) {
         if width > 0 && height > 0 {
             self.config.width = width;
             self.config.height = height;
+            self.scale_factor = scale_factor;
             self.surface.configure(&self.device, &self.config);
 
             // Recreate blur textures (Downsampled 4x for performance)
@@ -575,9 +671,10 @@ impl RenderPipeline {
             self.temp_texture = temp_texture;
             self.temp_texture_view = temp_view;
 
-            // Recreate main bind group
-            let bg_layout =
-                self.device
+            // Recreate main bind group with correct 5 entries (0-4)
+            self.bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &self
+                    .device
                     .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                         entries: &[
                             wgpu::BindGroupLayoutEntry {
@@ -634,24 +731,9 @@ impl RenderPipeline {
                                 },
                                 count: None,
                             },
-                            wgpu::BindGroupLayoutEntry {
-                                binding: 5,
-                                visibility: wgpu::ShaderStages::FRAGMENT,
-                                ty: wgpu::BindingType::Texture {
-                                    sample_type: wgpu::TextureSampleType::Float {
-                                        filterable: true,
-                                    },
-                                    view_dimension: wgpu::TextureViewDimension::D2,
-                                    multisampled: false,
-                                },
-                                count: None,
-                            },
                         ],
                         label: Some("Bind Group Layout"),
-                    });
-
-            self.bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &bg_layout,
+                    }),
                 entries: &[
                     wgpu::BindGroupEntry {
                         binding: 0,
@@ -659,22 +741,18 @@ impl RenderPipeline {
                     },
                     wgpu::BindGroupEntry {
                         binding: 1,
-                        resource: wgpu::BindingResource::TextureView(&self.texture_view),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 2,
                         resource: wgpu::BindingResource::TextureView(&self.background_texture_view),
                     },
                     wgpu::BindGroupEntry {
-                        binding: 3,
+                        binding: 2,
                         resource: wgpu::BindingResource::TextureView(&self.blurred_texture_view),
                     },
                     wgpu::BindGroupEntry {
-                        binding: 4,
+                        binding: 3,
                         resource: wgpu::BindingResource::TextureView(&self.icon_texture_view),
                     },
                     wgpu::BindGroupEntry {
-                        binding: 5,
+                        binding: 4,
                         resource: wgpu::BindingResource::TextureView(&self.cover_texture_view),
                     },
                 ],
@@ -683,8 +761,72 @@ impl RenderPipeline {
         }
     }
 
-
     pub fn draw(&mut self) {
+        // --- VIDEO BACKGROUND UPDATE ---
+        if let Some(ref mut player) = self.video_player {
+            if let Some(frame) = player.next_frame() {
+                match frame {
+                    VideoFrame::Rgba(rgba, w, h) => {
+                        self.queue.write_texture(
+                            wgpu::ImageCopyTexture {
+                                texture: &self.background_texture,
+                                mip_level: 0,
+                                origin: wgpu::Origin3d::ZERO,
+                                aspect: wgpu::TextureAspect::All,
+                            },
+                            &rgba,
+                            wgpu::ImageDataLayout {
+                                offset: 0,
+                                bytes_per_row: Some(w * 4),
+                                rows_per_image: Some(h),
+                            },
+                            wgpu::Extent3d { width: w, height: h, depth_or_array_layers: 1 },
+                        );
+                    },
+                    VideoFrame::HardwareBuffer(ptr) => {
+                        #[cfg(target_os = "android")]
+                        {
+                            if let Some(texture) = unsafe {
+                                crate::video::android_hw::import_android_buffer(&self.device, &self.queue, ptr, self.config.width, self.config.height)
+                            } {
+                                self.background_texture_view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+                                
+                                // Recreate bind group to point to the new texture
+                                self.bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                                    layout: &self.bg_layout,
+                                    entries: &[
+                                        wgpu::BindGroupEntry {
+                                            binding: 0,
+                                            resource: wgpu::BindingResource::Sampler(&self.sampler),
+                                        },
+                                        wgpu::BindGroupEntry {
+                                            binding: 1,
+                                            resource: wgpu::BindingResource::TextureView(&self.background_texture_view),
+                                        },
+                                        wgpu::BindGroupEntry {
+                                            binding: 2,
+                                            resource: wgpu::BindingResource::TextureView(&self.blurred_texture_view),
+                                        },
+                                        wgpu::BindGroupEntry {
+                                            binding: 3,
+                                            resource: wgpu::BindingResource::TextureView(&self.icon_texture_view),
+                                        },
+                                        wgpu::BindGroupEntry {
+                                            binding: 4,
+                                            resource: wgpu::BindingResource::TextureView(&self.cover_texture_view),
+                                        },
+                                    ],
+                                    label: Some("Dynamic Bind Group"),
+                                });
+                            }
+                            // Освобождаем нашу ссылку на AHardwareBuffer (Vulkan import сделал свою)
+                            unsafe { ndk_sys::AHardwareBuffer_release(ptr as *mut _); }
+                        }
+                    }
+                }
+            }
+        }
+
         let frame = match self.surface.get_current_texture() {
             Ok(frame) => frame,
             Err(_) => return,
@@ -710,7 +852,11 @@ impl RenderPipeline {
                 radius: 10.0,
                 direction: 0.0,
             };
-            self.queue.write_buffer(&self.blur_params_buffer_h, 0, bytemuck::bytes_of(&blur_params));
+            self.queue.write_buffer(
+                &self.blur_params_buffer_h,
+                0,
+                bytemuck::bytes_of(&blur_params),
+            );
 
             let blur_bg = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
                 layout: &self.blur_pipeline.get_bind_group_layout(0),
@@ -761,7 +907,11 @@ impl RenderPipeline {
                 radius: 10.0,
                 direction: 1.0,
             };
-            self.queue.write_buffer(&self.blur_params_buffer_v, 0, bytemuck::bytes_of(&blur_params));
+            self.queue.write_buffer(
+                &self.blur_params_buffer_v,
+                0,
+                bytemuck::bytes_of(&blur_params),
+            );
 
             let blur_bg = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
                 layout: &self.blur_pipeline.get_bind_group_layout(0),
@@ -822,6 +972,145 @@ impl RenderPipeline {
             pass.set_bind_group(0, &self.bind_group, &[]);
             pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             pass.draw(0..self.vertex_count, 0..1);
+
+            if self.vector_vertex_count > 0 {
+                pass.set_pipeline(&self.vector_pipeline);
+                // No bind group needed for vector pipeline
+                pass.set_vertex_buffer(0, self.vector_vertex_buffer.slice(..));
+                pass.draw(0..self.vector_vertex_count, 0..1);
+            }
+
+            // --- GLYPHON RENDERING ---
+            // Подготавливаем вьюпорт
+            self.text_viewport.update(
+                &self.queue,
+                Resolution {
+                    width: self.config.width,
+                    height: self.config.height,
+                },
+            );
+
+            // Наполняем буферы из пула
+            while self.text_buffer_pool.len() < self.text_requests.len() {
+                self.text_buffer_pool.push(ManagedBuffer {
+                    buffer: glyphon::Buffer::new(&mut self.font_system, Metrics::new(32.0, 42.0)),
+                    last_text: String::new(),
+                    last_scale: 0.0,
+                });
+            }
+
+            let mut text_areas = Vec::new();
+            let font_system = &mut self.font_system;
+
+            for ((text, x, y, scale, color), managed) in self
+                .text_requests
+                .iter()
+                .zip(self.text_buffer_pool.iter_mut())
+            {
+                // Шейпим ТОЛЬКО если текст или масштаб изменились
+                // ВАЖНО: Metrics должны быть в логических пикселях,
+                // так как glyphon::TextArea::scale применит scale_factor при растеризации.
+                // ВАЖНО: Теперь scale — это и есть размер шрифта в логических пикселях.
+                let logical_size = *scale;
+                if managed.last_text != *text || managed.last_scale != logical_size {
+                    managed
+                        .buffer
+                        .set_metrics(font_system, Metrics::new(logical_size, logical_size * 1.35));
+                    managed.buffer.set_size(
+                        font_system,
+                        Some(self.config.width as f32 / self.scale_factor),
+                        Some(self.config.height as f32 / self.scale_factor),
+                    );
+                    // Используем Thin Space (\u2009) для сужения пробелов (примерно 0.8 от обычного)
+                    let adjusted_text = text.replace(' ', "\u{2009}");
+                    managed.buffer.set_text(
+                        font_system,
+                        &adjusted_text,
+                        Attrs::new().family(Family::SansSerif),
+                        Shaping::Basic,
+                    );
+                    managed.buffer.shape_until_scroll(font_system, false);
+
+                    managed.last_text = text.clone();
+                    managed.last_scale = logical_size;
+                }
+
+                text_areas.push(glyphon::TextArea {
+                    buffer: &managed.buffer,
+                    left: *x,
+                    top: *y,
+                    scale: self.scale_factor,
+                    bounds: TextBounds {
+                        left: 0,
+                        top: 0,
+                        right: self.config.width as i32,
+                        bottom: self.config.height as i32,
+                    },
+                    default_color: glyphon::Color::rgba(
+                        (color[0] * 255.0) as u8,
+                        (color[1] * 255.0) as u8,
+                        (color[2] * 255.0) as u8,
+                        (color[3] * 255.0) as u8,
+                    ),
+                    custom_glyphs: &[],
+                });
+            }
+
+            // Важно: text_areas содержит ссылки на буферы, поэтому мы должны использовать их
+            // до того, как цикл завершится или буферы будут перемещены.
+            // Но в glyphon::TextArea время жизни привязано к буферу.
+            // Нам нужно вызвать prepare ПРЯМО ЗДЕСЬ, пока ссылки живы.
+
+            self.text_renderer
+                .prepare(
+                    &self.device,
+                    &self.queue,
+                    &mut self.font_system,
+                    &mut self.text_atlas,
+                    &self.text_viewport,
+                    text_areas,
+                    &mut self.swash_cache,
+                )
+                .unwrap();
+
+            self.text_renderer
+                .render(&self.text_atlas, &self.text_viewport, &mut pass)
+                .unwrap();
+
+            /* --- OLD MSDF RENDERING (Commented out) ---
+            if !self.text_instances.is_empty() {
+                // Загружаем инстансы на GPU
+                self.queue.write_buffer(&self.text_instance_buffer, 0, bytemuck::cast_slice(&self.text_instances));
+
+                // Настраиваем камеру (ортографическая проекция 2D)
+                let proj = [
+                    2.0 / self.config.width as f32, 0.0, 0.0, 0.0,
+                    0.0, -2.0 / self.config.height as f32, 0.0, 0.0,
+                    0.0, 0.0, 1.0, 0.0,
+                    -1.0, 1.0, 0.0, 1.0,
+                ];
+                self.queue.write_buffer(&self.text_camera_buffer, 0, bytemuck::cast_slice(&proj));
+
+                // Настраиваем параметры текста (по умолчанию)
+                let params = TextParams {
+                    transform: [
+                        1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 0.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        0.0, 0.0, 0.0, 1.0,
+                    ],
+                    color: [1.0, 1.0, 1.0, 1.0],
+                    scale: 1.0,
+                    _padding: [0.0; 3],
+                };
+                self.queue.write_buffer(&self.text_params_buffer, 0, bytemuck::cast_slice(&[params]));
+
+                pass.set_pipeline(&self.text_pipeline);
+                pass.set_bind_group(0, &self.text_bind_group_0, &[]);
+                pass.set_bind_group(1, &self.text_bind_group_1, &[]);
+                pass.draw(0..4, 0..self.text_instances.len() as u32);
+            }
+            */
         }
 
         self.queue.submit(std::iter::once(encoder.finish()));
