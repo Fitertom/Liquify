@@ -2,27 +2,16 @@
 0. Ensuring target... 
 info: component rust-std for target aarch64-linux-android is up to date
 1. Building and Packaging APK... 
+Already configuring "src/main.rs"
 Using package `Liquify` in `C:\Users\user\Documents\testlocal\Cargo.toml`
    Compiling Liquify v0.5.0 (C:\Users\user\Documents\testlocal)
-warning: unused imports: `EntityId`, `Entity`, and `SystemRegistry`
- --> src\ecs\mod.rs:7:20
-  |
-7 | pub use entities::{Entity, EntityId, SystemRegistry};
-  |                    ^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^
-  |
-  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
-
-warning: unused import: `manager::EntityManager`
- --> src\ecs\mod.rs:8:9
-  |
-8 | pub use manager::EntityManager;
-  |         ^^^^^^^^^^^^^^^^^^^^^^
-
 warning: unused import: `crate::ecs::components::*`
  --> src\render\pipeline.rs:1:5
   |
 1 | use crate::ecs::components::*;
   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
 
 warning: unused import: `crate::ecs::world::World`
  --> src\render\pipeline.rs:2:5
@@ -42,528 +31,1266 @@ warning: unused imports: `build_background_quad`, `build_glass_quad`, and `build
 5 | use crate::render::geometry::{Vertex, build_background_quad, build_glass_quad, build_shadow_quad};
   |                                       ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^
 
-warning: unused imports: `Vertex` and `build_quad`
- --> src\render\mod.rs:5:20
-  |
-5 | pub use geometry::{Vertex, build_quad};
-  |                    ^^^^^^  ^^^^^^^^^^
-
 warning: unused import: `libc`
- --> src\video\android_hw.rs:1:5
+ --> src\video\android_hw.rs:2:5
   |
-1 | use libc;
+2 | use libc;
   |     ^^^^
 
-warning: unused import: `AImageReader_acquireLatestImage`
-  --> src\video\android_hw.rs:17:78
-   |
-17 |     AImageReader_new, AImageReader_getWindow, AImageReader_acquireNextImage, AImageReader_acquireLatestImage,
-   |                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+warning: unused imports: `AImageReader_acquireLatestImage`, `AImageReader_acquireNextImage`, `AImage_delete`, and `AImage_getHardwareBuffer`
+ --> src\video\android_hw.rs:5:25
+  |
+5 |     AAssetManager_open, AImage_delete, AImage_getHardwareBuffer, AImageReader_acquireLatestImage,
+  |                         ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6 |     AImageReader_acquireNextImage, AImageReader_getWindow, AImageReader_new,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 warning: variable does not need to be mutable
-   --> src\render\pipeline.rs:261:63
+   --> src\render\pipeline.rs:357:25
     |
-261 |         let (bg_rgba, bg_w, bg_h, video_player) = if let Some(mut player) = VideoPlayer::new(video_path) {
-    |                                                               ----^^^^^^
-    |                                                               |
-    |                                                               help: remove this `mut`
+357 |             if let Some(mut player) = VideoPlayer::new(video_path) {
+    |                         ----^^^^^^
+    |                         |
+    |                         help: remove this `mut`
     |
     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
 
-warning: unused variable: `device`
-   --> src\font\mod.rs:127:59
+warning: variable does not need to be mutable
+   --> src\render\pipeline.rs:733:13
     |
-127 |     pub fn upload_texture(&self, texture: &wgpu::Texture, device: &wgpu::Device, queue: &wgpu::Queue) {
-    |                                                           ^^^^^^ help: if this is intentional, prefix it with an underscore: `_device`
+733 |         let mut gradient_text_buffer = glyphon::Buffer::new(&mut font_system, glyphon::Metrics::new(32.0, 42.0));
+    |             ----^^^^^^^^^^^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unused variable: `id`
+   --> src\ecs\systems.rs:242:10
+    |
+242 |     for (id, ctrl_type) in control_types {
+    |          ^^ help: if this is intentional, prefix it with an underscore: `_id`
     |
     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
 
-warning: unused variable: `fps_text`
-  --> src\render\draw.rs:88:78
-   |
-88 | ...ld, input: &InputState, fps_text: &str, win_w: f32, win_h: f32, scale_factor: f32) {
-   |                            ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_fps_text`
-
-warning[E0133]: call to unsafe function `libc::dlopen` is unsafe and requires unsafe block
-  --> src\video\vulkan_import.rs:15:15
-   |
-15 |       let lib = libc::dlopen(
-   |  _______________^
-16 | |         c"libvulkan.so".as_ptr(),
-17 | |         libc::RTLD_NOW | libc::RTLD_NOLOAD,
-18 | |     );
-   | |_____^ call to unsafe function
-   |
-   = note: consult the function's documentation for information on how to avoid undefined behavior
-note: an unsafe function restricts its caller, but its body is safe by default
-  --> src\video\vulkan_import.rs:8:1
-   |
- 8 | / unsafe fn load_get_ahb_props_fn() -> Option<
- 9 | |     extern "system" fn(
-10 | |         vk::Device,
-11 | |         *const std::ffi::c_void,
-12 | |         *mut vk::AndroidHardwareBufferPropertiesANDROID,
-13 | |     ) -> vk::Result,
-14 | | > {
-   | |_^
-   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-   = note: `#[warn(unsafe_op_in_unsafe_fn)]` (part of `#[warn(rust_2024_compatibility)]`) on by default
-
-warning[E0133]: call to unsafe function `libc::dlsym` is unsafe and requires unsafe block
-  --> src\video\vulkan_import.rs:24:15
-   |
-24 |       let sym = libc::dlsym(
-   |  _______________^
-25 | |         lib,
-26 | |         c"vkGetAndroidHardwareBufferPropertiesANDROID".as_ptr(),
-27 | |     );
-   | |_____^ call to unsafe function
-   |
-   = note: consult the function's documentation for information on how to avoid undefined behavior
-   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-
-warning[E0133]: call to unsafe function `libc::dlclose` is unsafe and requires unsafe block
-  --> src\video\vulkan_import.rs:28:5
-   |
-28 |     libc::dlclose(lib);
-   |     ^^^^^^^^^^^^^^^^^^ call to unsafe function
-   |
-   = note: consult the function's documentation for information on how to avoid undefined behavior
-   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-
-warning[E0133]: call to unsafe function `std::intrinsics::transmute` is unsafe and requires unsafe block
-  --> src\video\vulkan_import.rs:35:10
-   |
-35 |     Some(std::mem::transmute(sym))
-   |          ^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-   |
-   = note: consult the function's documentation for information on how to avoid undefined behavior
-   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-
-warning[E0133]: call to unsafe function `wgpu::Device::as_hal` is unsafe and requires unsafe block
-   --> src\video\vulkan_import.rs:45:5
+warning: unused variable: `id`
+   --> src\ecs\systems.rs:261:10
     |
- 45 | /     device
- 46 | |         .as_hal::<hal::api::Vulkan, _, Option<wgpu::Texture>>(|hal_device| {
- 47 | |             let hal_device = match hal_device {
- 48 | |                 Some(d) => d,
-...   |
-185 | |             Some(device.create_texture_from_hal::<hal::api::Vulkan>(hal_texture, &texture_desc))
-186 | |         })
-    | |__________^ call to unsafe function
+261 |     for (id, ctrl_type) in sr_types {
+    |          ^^ help: if this is intentional, prefix it with an underscore: `_id`
+
+warning: unused variable: `id`
+   --> src\ecs\systems.rs:312:10
+    |
+312 |     for (id, ctrl_type) in mini_controls {
+    |          ^^ help: if this is intentional, prefix it with an underscore: `_id`
+
+warning: variable does not need to be mutable
+   --> src\ecs\systems.rs:933:33
+    |
+933 |                     if let Some(mut r) = world.get_component_mut::<Renderable>(entity_id) {
+    |                                 ----^
+    |                                 |
+    |                                 help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\ecs\systems.rs:950:33
+    |
+950 |                     if let Some(mut r) = world.get_component_mut::<Renderable>(entity_id) {
+    |                                 ----^
+    |                                 |
+    |                                 help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\ecs\systems.rs:970:41
+    |
+970 | ...                   if let Some(mut r) = world.get_component_mut::<Renderable>(entity_id) {
+    |                                   ----^
+    |                                   |
+    |                                   help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\ecs\systems.rs:981:41
+    |
+981 | ...                   if let Some(mut p) = world.get_component_mut::<Player>(player_eid) {
+    |                                   ----^
+    |                                   |
+    |                                   help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\ecs\systems.rs:986:41
+    |
+986 | ...                   if let Some(mut m) = world.get_component_mut::<MiniPlayer>(mini_eid) {
+    |                                   ----^
+    |                                   |
+    |                                   help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\ecs\systems.rs:993:41
+    |
+993 | ...                   if let Some(mut p) = world.get_component_mut::<Player>(player_eid) {
+    |                                   ----^
+    |                                   |
+    |                                   help: remove this `mut`
+
+warning: variable does not need to be mutable
+    --> src\ecs\systems.rs:1000:41
+     |
+1000 | ...                   if let Some(mut p) = world.get_component_mut::<Player>(player_eid) {
+     |                                   ----^
+     |                                   |
+     |                                   help: remove this `mut`
+
+warning: variable does not need to be mutable
+    --> src\ecs\systems.rs:1007:41
+     |
+1007 | ...                   if let Some(mut p) = world.get_component_mut::<Player>(player_eid) {
+     |                                   ----^
+     |                                   |
+     |                                   help: remove this `mut`
+
+warning: variable does not need to be mutable
+    --> src\ecs\systems.rs:1026:33
+     |
+1026 |                     if let Some(mut r) = world.get_component_mut::<Renderable>(entity_id) {
+     |                                 ----^
+     |                                 |
+     |                                 help: remove this `mut`
+
+warning: unused variable: `max_vertices`
+   --> src\render\pipeline.rs:549:13
+    |
+549 |         let max_vertices = 10000;
+    |             ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_max_vertices`
+
+warning: variable does not need to be mutable
+   --> src\render\draw.rs:343:17
+    |
+343 |             let mut control_order = vec![ControlType::Prev, ControlType::Play, ControlType::Next];
+    |                 ----^^^^^^^^^^^^^
+    |                 |
+    |                 help: remove this `mut`
+
+warning: unused variable: `fps_text`
+   --> src\render\draw.rs:126:78
+    |
+126 | ...ld, input: &InputState, fps_text: &str, win_w: f32, win_h: f32, scale_factor: f32) {
+    |                            ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_fps_text`
+
+warning[E0133]: call to unsafe function `video::vulkan_import::load_get_ahb_props_fn` is unsafe and requires unsafe block
+   --> src\video\vulkan_import.rs:124:18
+    |
+124 |     let fn_get = load_get_ahb_props_fn()?;
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
     |
     = note: consult the function's documentation for information on how to avoid undefined behavior
 note: an unsafe function restricts its caller, but its body is safe by default
-   --> src\video\vulkan_import.rs:38:1
+   --> src\video\vulkan_import.rs:120:1
     |
- 38 | / pub unsafe fn import_android_buffer(
- 39 | |     device: &wgpu::Device,
- 40 | |     _queue: &wgpu::Queue,
- 41 | |     buffer_ptr: *mut std::ffi::c_void, // AHardwareBuffer*
- 42 | |     width: u32,
- 43 | |     height: u32,
- 44 | | ) -> Option<wgpu::Texture> {
-    | |__________________________^
+120 | / pub unsafe fn query_ahb_properties(
+121 | |     raw_device: &ash::Device,
+122 | |     buffer_ptr: *mut std::ffi::c_void,
+123 | | ) -> Option<(u64, AhbFormatProps)> {
+    | |__________________________________^
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: `#[warn(unsafe_op_in_unsafe_fn)]` (part of `#[warn(rust_2024_compatibility)]`) on by default
+
+warning[E0133]: call to unsafe function `video::vulkan_import::query_ahb_props_internal` is unsafe and requires unsafe block
+   --> src\video\vulkan_import.rs:125:37
+    |
+125 |       let (ahb_props, format_props) = query_ahb_props_internal(
+    |  _____________________________________^
+126 | |         raw_device, fn_get, buffer_ptr as *const _
+127 | |     )?;
+    | |_____^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
     = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
 
 warning[E0133]: call to unsafe function `video::vulkan_import::load_get_ahb_props_fn` is unsafe and requires unsafe block
-  --> src\video\vulkan_import.rs:57:42
-   |
-57 |             let vk_get_ahb_props = match load_get_ahb_props_fn() {
-   |                                          ^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-   |
-   = note: consult the function's documentation for information on how to avoid undefined behavior
-   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-
-warning[E0133]: call to unsafe function `ash::Device::create_image` is unsafe and requires unsafe block
-   --> src\video\vulkan_import.rs:113:34
+   --> src\video\vulkan_import.rs:136:18
     |
-113 |             let vk_image = match raw_device.create_image(&image_create_info, None) {
-    |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+136 |     let fn_get = load_get_ahb_props_fn()?;
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\video\vulkan_import.rs:132:1
+    |
+132 | / pub unsafe fn query_ahb_properties_struct(
+133 | |     raw_device: &ash::Device,
+134 | |     buffer_ptr: *mut std::ffi::c_void,
+135 | | ) -> Option<(u64, AhbProps)> {
+    | |____________________________^
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `video::vulkan_import::query_ahb_props_internal` is unsafe and requires unsafe block
+   --> src\video\vulkan_import.rs:137:26
+    |
+137 |       let (ahb_props, _) = query_ahb_props_internal(
+    |  __________________________^
+138 | |         raw_device, fn_get, buffer_ptr as *const _
+139 | |     )?;
+    | |_____^ call to unsafe function
     |
     = note: consult the function's documentation for information on how to avoid undefined behavior
     = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
 
-warning[E0133]: call to unsafe function `ash::Device::allocate_memory` is unsafe and requires unsafe block
-   --> src\video\vulkan_import.rs:130:32
+warning[E0133]: call to unsafe function `wgpu::Device::as_hal` is unsafe and requires unsafe block
+   --> src\video\vulkan_import.rs:162:22
     |
-130 |             let memory = match raw_device.allocate_memory(&alloc_info, None) {
-    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-
-warning[E0133]: call to unsafe function `ash::Device::destroy_image` is unsafe and requires unsafe block
-   --> src\video\vulkan_import.rs:133:21
-    |
-133 |                     raw_device.destroy_image(vk_image, None);
-    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+162 |     let hal_device = device.as_hal::<hal::api::Vulkan>()?;
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
     |
     = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\video\vulkan_import.rs:154:1
+    |
+154 | / pub unsafe fn import_android_buffer(
+155 | |     device: &wgpu::Device,
+156 | |     _queue: &wgpu::Queue,
+157 | |     buffer_ptr: *mut std::ffi::c_void,
+158 | |     width: u32,
+159 | |     height: u32,
+160 | | ) -> Option<wgpu::Texture> {
+    | |__________________________^
     = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
 
-warning[E0133]: call to unsafe function `ash::Device::bind_image_memory` is unsafe and requires unsafe block
-   --> src\video\vulkan_import.rs:139:29
+warning[E0133]: call to unsafe function `video::vulkan_import::query_ahb_props_internal` is unsafe and requires unsafe block
+   --> src\video\vulkan_import.rs:169:26
     |
-139 |             if let Err(e) = raw_device.bind_image_memory(vk_image, memory, 0) {
-    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-
-warning[E0133]: call to unsafe function `ash::Device::free_memory` is unsafe and requires unsafe block
-   --> src\video\vulkan_import.rs:140:17
-    |
-140 |                 raw_device.free_memory(memory, None);
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
-    |
-    = note: consult the function's documentation for information on how to avoid undefined behavior
-    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
-
-warning[E0133]: call to unsafe function `ash::Device::destroy_image` is unsafe and requires unsafe block
-   --> src\video\vulkan_import.rs:141:17
-    |
-141 |                 raw_device.destroy_image(vk_image, None);
-    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+169 |       let (ahb_props, _) = query_ahb_props_internal(
+    |  __________________________^
+170 | |         raw_device, fn_get, buffer_ptr as *const _
+171 | |     )?;
+    | |_____^ call to unsafe function
     |
     = note: consult the function's documentation for information on how to avoid undefined behavior
     = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
 
 warning[E0133]: call to unsafe function `wgpu_hal::vulkan::device::<impl wgpu_hal::vulkan::Device>::texture_from_raw` is unsafe and requires unsafe block
-   --> src\video\vulkan_import.rs:163:31
+   --> src\video\vulkan_import.rs:268:23
     |
-163 |               let hal_texture = wgpu_hal::vulkan::Device::texture_from_raw(
-    |  _______________________________^
-164 | |                 vk_image,
-165 | |                 &hal_desc,
-166 | |                 Some(Box::new(memory)),
-167 | |             );
+268 |       let hal_texture = hal_device.texture_from_raw(
+    |  _______________________^
+269 | |         vk_image,
+270 | |         &hal_desc,
+271 | |         None,
+272 | |         hal::vulkan::TextureMemory::Dedicated(memory),
+273 | |     );
+    | |_____^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Instance::get_device_proc_addr` is unsafe and requires unsafe block
+  --> src\video\raw_vulkan_ycbcr.rs:19:15
+   |
+19 |     let ptr = instance.get_device_proc_addr(device, name.as_ptr());
+   |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+  --> src\video\raw_vulkan_ycbcr.rs:11:1
+   |
+11 | / unsafe fn load_get_ahb_props_fn_local(
+12 | |     instance: &ash::Instance,
+13 | |     device: vk::Device,
+14 | | ) -> Option<FnGetAhbProps> {
+   | |__________________________^
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `std::intrinsics::transmute` is unsafe and requires unsafe block
+  --> src\video\raw_vulkan_ycbcr.rs:20:17
+   |
+20 |     ptr.map(|f| std::mem::transmute(f))
+   |                 ^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::create_command_pool` is unsafe and requires unsafe block
+  --> src\video\raw_vulkan_ycbcr.rs:75:28
+   |
+75 |           let command_pool = device
+   |  ____________________________^
+76 | |             .create_command_pool(
+77 | |                 &vk::CommandPoolCreateInfo::default()
+78 | |                     .queue_family_index(queue_family_index)
+79 | |                     .flags(vk::CommandPoolCreateFlags::RESET_COMMAND_BUFFER),
+80 | |                 None,
+81 | |             )
+   | |_____________^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+  --> src\video\raw_vulkan_ycbcr.rs:70:5
+   |
+70 | /     pub unsafe fn new(
+71 | |         device: &ash::Device,
+72 | |         queue_family_index: u32,
+73 | |         queue: vk::Queue,
+74 | |     ) -> Option<Self> {
+   | |_____________________^
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::allocate_command_buffers` is unsafe and requires unsafe block
+  --> src\video\raw_vulkan_ycbcr.rs:84:30
+   |
+84 |           let command_buffer = device
+   |  ______________________________^
+85 | |             .allocate_command_buffers(
+86 | |                 &vk::CommandBufferAllocateInfo::default()
+87 | |                     .command_pool(command_pool)
+88 | |                     .level(vk::CommandBufferLevel::PRIMARY)
+89 | |                     .command_buffer_count(1),
+90 | |             )
+   | |_____________^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::create_fence` is unsafe and requires unsafe block
+  --> src\video\raw_vulkan_ycbcr.rs:93:21
+   |
+93 |           let fence = device
+   |  _____________________^
+94 | |             .create_fence(
+95 | |                 // SIGNALED: первый wait_for_fences пройдёт сразу
+96 | |                 &vk::FenceCreateInfo::default().flags(vk::FenceCreateFlags::SIGNALED),
+97 | |                 None,
+98 | |             )
+   | |_____________^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::wait_for_fences` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:112:9
+    |
+112 | /         device
+113 | |             .wait_for_fences(&[self.fence], true, u64::MAX)
+    | |___________________________________________________________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\video\raw_vulkan_ycbcr.rs:111:5
+    |
+111 |     pub unsafe fn begin_frame(&self, device: &ash::Device) {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::reset_fences` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:115:9
+    |
+115 |         device.reset_fences(&[self.fence]).unwrap();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::reset_command_buffer` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:117:9
+    |
+117 | /         device
+118 | |             .reset_command_buffer(
+119 | |                 self.command_buffer,
+120 | |                 vk::CommandBufferResetFlags::empty(),
+121 | |             )
     | |_____________^ call to unsafe function
     |
     = note: consult the function's documentation for information on how to avoid undefined behavior
     = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
 
-warning[E0133]: call to unsafe function `wgpu::Device::create_texture_from_hal` is unsafe and requires unsafe block
-   --> src\video\vulkan_import.rs:185:18
+warning[E0133]: call to unsafe function `ash::Device::begin_command_buffer` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:124:9
     |
-185 |             Some(device.create_texture_from_hal::<hal::api::Vulkan>(hal_texture, &texture_desc))
-    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+124 | /         device
+125 | |             .begin_command_buffer(
+126 | |                 self.command_buffer,
+127 | |                 &vk::CommandBufferBeginInfo::default()
+128 | |                     .flags(vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT),
+129 | |             )
+    | |_____________^ call to unsafe function
     |
     = note: consult the function's documentation for information on how to avoid undefined behavior
     = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
 
-warning: type `ManagedBuffer` is more private than the item `render::pipeline::RenderPipeline::text_buffer_pool`
-  --> src\render\pipeline.rs:85:5
-   |
-85 |     pub text_buffer_pool: Vec<ManagedBuffer>,
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ field `render::pipeline::RenderPipeline::text_buffer_pool` is reachable at visibility `pub(crate)`
-   |
-note: but type `ManagedBuffer` is only usable at visibility `pub(self)`
-  --> src\render\pipeline.rs:37:1
-   |
-37 | struct ManagedBuffer {
-   | ^^^^^^^^^^^^^^^^^^^^
-   = note: `#[warn(private_interfaces)]` on by default
-
-warning: methods `has_component` and `remove_component` are never used
-  --> src\ecs\entities.rs:32:12
-   |
-12 | impl Entity {
-   | ----------- methods in this implementation
-...
-32 |     pub fn has_component<T: 'static>(&self) -> bool {
-   |            ^^^^^^^^^^^^^
-...
-36 |     pub fn remove_component<T: 'static>(&mut self) -> Option<T> {
-   |            ^^^^^^^^^^^^^^^^
-   |
-   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
-
-warning: type alias `SystemFn` is never used
-  --> src\ecs\entities.rs:42:10
-   |
-42 | pub type SystemFn = Box<dyn FnMut(&mut World)>;
-   |          ^^^^^^^^
-
-warning: struct `SystemRegistry` is never constructed
-  --> src\ecs\entities.rs:44:12
-   |
-44 | pub struct SystemRegistry {
-   |            ^^^^^^^^^^^^^^
-
-warning: associated items `new`, `register`, `run_all`, and `run_named` are never used
-  --> src\ecs\entities.rs:49:12
-   |
-48 | impl SystemRegistry {
-   | ------------------- associated items in this implementation
-49 |     pub fn new() -> Self {
-   |            ^^^
-...
-55 |     pub fn register<F: FnMut(&mut World) + 'static>(&mut self, name: &str, system: F) {
-   |            ^^^^^^^^
-...
-59 |     pub fn run_all(&mut self, world: &mut World) {
-   |            ^^^^^^^
-...
-65 |     pub fn run_named(&mut self, world: &mut World, name: &str) -> bool {
-   |            ^^^^^^^^^
-
-warning: multiple methods are never used
-  --> src\ecs\manager.rs:32:12
-   |
- 9 | impl EntityManager {
-   | ------------------ methods in this implementation
-...
-32 |     pub fn remove_entity(&mut self, id: EntityId) -> Option<Entity> {
-   |            ^^^^^^^^^^^^^
-...
-36 |     pub fn has_entity(&self, id: EntityId) -> bool {
-   |            ^^^^^^^^^^
-...
-40 |     pub fn with_components<T: 'static>(&self, required: &[std::any::TypeId]) -> Vec<&Entity> {
-   |            ^^^^^^^^^^^^^^^
-...
-46 |     pub fn with_components_mut<T: 'static>(&mut self, required: &[std::any::TypeId]) -> Vec<&mut Entity> {
-   |            ^^^^^^^^^^^^^^^^^^^
-...
-56 |     pub fn all_entities_mut(&mut self) -> Vec<&mut Entity> {
-   |            ^^^^^^^^^^^^^^^^
-...
-60 |     pub fn len(&self) -> usize {
-   |            ^^^
-...
-64 |     pub fn is_empty(&self) -> bool {
-   |            ^^^^^^^^
-
-warning: methods `get_entity`, `get_entity_mut`, `query_with`, and `query_with_two` are never used
-  --> src\ecs\world.rs:20:12
-   |
- 9 | impl World {
-   | ---------- methods in this implementation
-...
-20 |     pub fn get_entity(&self, id: EntityId) -> Option<&Entity> {
-   |            ^^^^^^^^^^
-...
-24 |     pub fn get_entity_mut(&mut self, id: EntityId) -> Option<&mut Entity> {
-   |            ^^^^^^^^^^^^^^
-...
-45 |     pub fn query_with<T: 'static>(&self) -> Vec<(&Entity, &T)> {
-   |            ^^^^^^^^^^
-...
-58 |     pub fn query_with_two<T: 'static, U: 'static>(&self) -> Vec<(&Entity, &T, &U)> {
-   |            ^^^^^^^^^^^^^^
-
-warning: struct `Color` is never constructed
-  --> src\ecs\components.rs:16:12
-   |
-16 | pub struct Color {
-   |            ^^^^^
-
-warning: method `to_array` is never used
-  --> src\ecs\components.rs:24:12
-   |
-23 | impl Color {
-   | ---------- method in this implementation
-24 |     pub fn to_array(self) -> [f32; 4] {
-   |            ^^^^^^^^
-
-warning: field `icon` is never read
-  --> src\ecs\components.rs:33:9
-   |
-30 | pub struct UICard {
-   |            ------ field in this struct
-...
-33 |     pub icon: String,
-   |         ^^^^
-   |
-   = note: `UICard` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
-
-warning: field `visible` is never read
-  --> src\ecs\components.rs:51:9
-   |
-50 | pub struct Renderable {
-   |            ---------- field in this struct
-51 |     pub visible: bool,
-   |         ^^^^^^^
-   |
-   = note: `Renderable` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
-
-warning: field `icon` is never read
-  --> src\ecs\components.rs:66:9
-   |
-63 | pub struct UINavButton {
-   |            ----------- field in this struct
-...
-66 |     pub icon: String,
-   |         ^^^^
-   |
-   = note: `UINavButton` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
-
-warning: struct `UIImage` is never constructed
-  --> src\ecs\components.rs:71:12
-   |
-71 | pub struct UIImage {
-   |            ^^^^^^^
-
-warning: function `type_id_of` is never used
-  --> src\ecs\components.rs:75:8
-   |
-75 | pub fn type_id_of<T: 'static>() -> TypeId {
-   |        ^^^^^^^^^^
-
-warning: struct `Calculator` is never constructed
- --> src\calculator\mod.rs:3:12
-  |
-3 | pub struct Calculator {
-  |            ^^^^^^^^^^
-
-warning: associated function `new` is never used
- --> src\calculator\mod.rs:8:12
-  |
-7 | impl Calculator {
-  | --------------- associated function in this implementation
-8 |     pub fn new() -> Self {
-  |            ^^^
-
-warning: fields `gpu_index` and `advance` are never read
-  --> src\font\mod.rs:16:9
-   |
-15 | pub struct AtlasGlyph {
-   |            ---------- fields in this struct
-16 |     pub gpu_index: u32,
-   |         ^^^^^^^^^
-17 |     pub advance: f32,
-   |         ^^^^^^^
-
-warning: fields `font`, `glyphs`, `char_to_glyph`, and `line_height` are never read
-  --> src\font\mod.rs:21:9
-   |
-20 | pub struct FontAtlas {
-   |            --------- fields in this struct
-21 |     pub font: Font,
-   |         ^^^^
-...
-25 |     pub glyphs: Vec<GPUChar>,
-   |         ^^^^^^
-26 |     pub char_to_glyph: HashMap<u32, AtlasGlyph>,
-   |         ^^^^^^^^^^^^^
-27 |     pub line_height: f32,
-   |         ^^^^^^^^^^^
-
-warning: method `get_glyph` is never used
-   --> src\font\mod.rs:105:12
+warning[E0133]: call to unsafe function `ash::Device::end_command_buffer` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:135:9
     |
- 30 | impl FontAtlas {
-    | -------------- method in this implementation
-...
-105 |     pub fn get_glyph(&self, codepoint: u32) -> Option<&AtlasGlyph> {
-    |            ^^^^^^^^^
+135 |         device.end_command_buffer(self.command_buffer).unwrap();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\video\raw_vulkan_ycbcr.rs:134:5
+    |
+134 |     pub unsafe fn submit(&self, device: &ash::Device) {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
 
-warning: function `build_quad` is never used
-  --> src\render\geometry.rs:35:8
-   |
-35 | pub fn build_quad(x: f32, y: f32, w: f32, h: f32, color: [f32; 4], radii: [f32; 4]) -> [Vertex; 6] {
-   |        ^^^^^^^^^^
+warning[E0133]: call to unsafe function `ash::Device::queue_submit` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:140:9
+    |
+140 | /         device
+141 | |             .queue_submit(self.queue, &[submit_info], self.fence)
+    | |_________________________________________________________________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
 
-warning: multiple fields are never read
-  --> src\render\pipeline.rs:50:9
-   |
-43 | pub struct RenderPipeline {
-   |            -------------- fields in this struct
-...
-50 |     pub font_texture: wgpu::Texture,
-   |         ^^^^^^^^^^^^
-51 |     pub texture_view: wgpu::TextureView,
-   |         ^^^^^^^^^^^^
-...
-57 |     pub font_atlas: FontAtlas,
-   |         ^^^^^^^^^^
-58 |     pub max_vertices: usize,
-   |         ^^^^^^^^^^^^
-...
-69 |     pub icon_texture: wgpu::Texture,
-   |         ^^^^^^^^^^^^
-...
-72 |     pub cover_texture: wgpu::Texture,
-   |         ^^^^^^^^^^^^^
-...
-88 |     pub blur_bg_layout: wgpu::BindGroupLayout,
-   |         ^^^^^^^^^^^^^^
+warning[E0133]: call to unsafe function `ash::Device::wait_for_fences` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:146:17
+    |
+146 |         let _ = device.wait_for_fences(&[self.fence], true, u64::MAX);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\video\raw_vulkan_ycbcr.rs:145:5
+    |
+145 |     pub unsafe fn destroy(&self, device: &ash::Device) {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
 
-warning: variant `Rgba` is never constructed
-  --> src\video\mod.rs:11:5
-   |
-10 | pub enum VideoFrame {
-   |          ---------- variant in this enum
-11 |     Rgba(Vec<u8>, u32, u32),
-   |     ^^^^
+warning[E0133]: call to unsafe function `ash::Device::destroy_fence` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:147:9
+    |
+147 |         device.destroy_fence(self.fence, None);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
 
-warning: method `duration` is never used
-  --> src\video\mod.rs:18:8
-   |
-16 | pub trait VideoBackend {
-   |           ------------ method in this trait
-17 |     fn next_frame(&mut self) -> Option<VideoFrame>;
-18 |     fn duration(&self) -> Duration;
-   |        ^^^^^^^^
+warning[E0133]: call to unsafe function `ash::Device::destroy_command_pool` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:148:9
+    |
+148 |         device.destroy_command_pool(self.command_pool, None);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
 
-warning: method `duration` is never used
-  --> src\video\mod.rs:42:12
-   |
-26 | impl VideoPlayer {
-   | ---------------- method in this implementation
-...
-42 |     pub fn duration(&self) -> Duration {
-   |            ^^^^^^^^
+warning[E0133]: call to unsafe function `video::raw_vulkan_ycbcr::load_get_ahb_props_fn_local` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:162:22
+    |
+162 |         let fn_get = load_get_ahb_props_fn_local(instance, device.handle())?;
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\video\raw_vulkan_ycbcr.rs:153:5
+    |
+153 | /     pub unsafe fn new(
+154 | |         instance: &ash::Instance,
+155 | |         physical_device: vk::PhysicalDevice,
+156 | |         device: &ash::Device,
+...   |
+160 | |         format_props: &AhbFormatProps,
+161 | |     ) -> Option<Self> {
+    | |_____________________^
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
 
-warning: field `duration` is never read
-  --> src\video\android_hw.rs:29:5
-   |
-23 | pub struct AndroidHwBackend {
-   |            ---------------- field in this struct
-...
-29 |     duration: Duration,
-   |     ^^^^^^^^
+warning[E0133]: call to unsafe function `ash::Device::create_sampler_ycbcr_conversion` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:179:32
+    |
+179 |           let ycbcr_conversion = device
+    |  ________________________________^
+180 | |             .create_sampler_ycbcr_conversion(&ycbcr_info, None)
+    | |_______________________________________________________________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::create_sampler` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:198:29
+    |
+198 |           let ycbcr_sampler = device
+    |  _____________________________^
+199 | |             .create_sampler(&sampler_info, None)
+    | |________________________________________________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::create_descriptor_set_layout` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:212:37
+    |
+212 |           let descriptor_set_layout = device
+    |  _____________________________________^
+213 | |             .create_descriptor_set_layout(
+214 | |                 &vk::DescriptorSetLayoutCreateInfo::default().bindings(&bindings),
+215 | |                 None,
+216 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::create_image` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:221:28
+    |
+221 |           let output_image = device
+    |  ____________________________^
+222 | |             .create_image(
+223 | |                 &vk::ImageCreateInfo::default()
+224 | |                     .image_type(vk::ImageType::TYPE_2D)
+...   |
+238 | |                 None,
+239 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `video::raw_vulkan_ycbcr::RawYcbcrPipeline::alloc_image_memory` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:243:29
+    |
+243 |           let output_memory = Self::alloc_image_memory(
+    |  _____________________________^
+244 | |             instance,
+245 | |             physical_device,
+246 | |             device,
+247 | |             output_image,
+248 | |             vk::MemoryPropertyFlags::DEVICE_LOCAL,
+249 | |         )?;
+    | |_________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::bind_image_memory` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:251:9
+    |
+251 | /         device
+252 | |             .bind_image_memory(output_image, output_memory, 0)
+    | |______________________________________________________________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::create_image_view` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:256:33
+    |
+256 |           let output_image_view = device
+    |  _________________________________^
+257 | |             .create_image_view(
+258 | |                 &vk::ImageViewCreateInfo::default()
+259 | |                     .image(output_image)
+...   |
+269 | |                 None,
+270 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::create_render_pass` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:301:27
+    |
+301 |           let render_pass = device
+    |  ___________________________^
+302 | |             .create_render_pass(
+303 | |                 &vk::RenderPassCreateInfo::default()
+304 | |                     .attachments(&attachments)
+...   |
+307 | |                 None,
+308 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::create_framebuffer` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:314:34
+    |
+314 |           let output_framebuffer = device
+    |  __________________________________^
+315 | |             .create_framebuffer(
+316 | |                 &vk::FramebufferCreateInfo::default()
+317 | |                     .render_pass(render_pass)
+...   |
+322 | |                 None,
+323 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::create_pipeline_layout` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:329:31
+    |
+329 |           let pipeline_layout = device
+    |  _______________________________^
+330 | |             .create_pipeline_layout(
+331 | |                 &vk::PipelineLayoutCreateInfo::default().set_layouts(&set_layouts),
+332 | |                 None,
+333 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::create_shader_module` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:338:27
+    |
+338 |           let vert_module = device
+    |  ___________________________^
+339 | |             .create_shader_module(
+340 | |                 &vk::ShaderModuleCreateInfo::default().code(vert_spirv_words()),
+341 | |                 None,
+342 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::create_shader_module` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:346:27
+    |
+346 |           let frag_module = device
+    |  ___________________________^
+347 | |             .create_shader_module(
+348 | |                 &vk::ShaderModuleCreateInfo::default().code(frag_spirv_words()),
+349 | |                 None,
+350 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::create_graphics_pipelines` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:413:33
+    |
+413 |           let graphics_pipeline = device
+    |  _________________________________^
+414 | |             .create_graphics_pipelines(
+415 | |                 vk::PipelineCache::null(),
+416 | |                 std::slice::from_ref(&pipeline_info),
+417 | |                 None,
+418 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_shader_module` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:422:9
+    |
+422 |         device.destroy_shader_module(vert_module, None);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_shader_module` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:423:9
+    |
+423 |         device.destroy_shader_module(frag_module, None);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::create_descriptor_pool` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:431:31
+    |
+431 |           let descriptor_pool = device
+    |  _______________________________^
+432 | |             .create_descriptor_pool(
+433 | |                 &vk::DescriptorPoolCreateInfo::default()
+434 | |                     .pool_sizes(&pool_sizes)
+...   |
+437 | |                 None,
+438 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::get_image_memory_requirements` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:470:24
+    |
+470 |         let mem_reqs = device.get_image_memory_requirements(image);
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\video\raw_vulkan_ycbcr.rs:463:5
+    |
+463 | /     unsafe fn alloc_image_memory(
+464 | |         instance: &ash::Instance,
+465 | |         physical_device: vk::PhysicalDevice,
+466 | |         device: &ash::Device,
+467 | |         image: vk::Image,
+468 | |         required_flags: vk::MemoryPropertyFlags,
+469 | |     ) -> Option<vk::DeviceMemory> {
+    | |_________________________________^
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Instance::get_physical_device_memory_properties` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:471:25
+    |
+471 |         let mem_props = instance.get_physical_device_memory_properties(physical_device);
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::allocate_memory` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:482:9
+    |
+482 | /         device
+483 | |             .allocate_memory(
+484 | |                 &vk::MemoryAllocateInfo::default()
+485 | |                     .allocation_size(mem_reqs.size)
+486 | |                     .memory_type_index(memory_type_index),
+487 | |                 None,
+488 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::free_descriptor_sets` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:498:13
+    |
+498 | /             device
+499 | |                 .free_descriptor_sets(self.descriptor_pool, &[old.descriptor_set])
+    | |__________________________________________________________________________________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\video\raw_vulkan_ycbcr.rs:496:5
+    |
+496 |     unsafe fn drop_slot(&mut self, device: &ash::Device) {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_image_view` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:501:13
+    |
+501 |             device.destroy_image_view(old.image_view, None);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_image` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:502:13
+    |
+502 |             device.destroy_image(old.image, None);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::free_memory` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:503:13
+    |
+503 |             device.free_memory(old.memory, None);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::create_image` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:522:21
+    |
+522 |           let image = device
+    |  _____________________^
+523 | |             .create_image(
+524 | |                 &vk::ImageCreateInfo::default()
+525 | |                     .push_next(&mut ext_mem_info)
+...   |
+537 | |                 None,
+538 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\video\raw_vulkan_ycbcr.rs:509:5
+    |
+509 | /     unsafe fn create_slot(
+510 | |         &self,
+511 | |         device: &ash::Device,
+512 | |         buffer_ptr: *mut std::ffi::c_void,
+513 | |         external_format: u64,
+514 | |         ahb_props: &AhbProps,
+515 | |     ) -> Option<AhbSlot> {
+    | |________________________^
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::allocate_memory` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:548:22
+    |
+548 |           let memory = device
+    |  ______________________^
+549 | |             .allocate_memory(
+550 | |                 &vk::MemoryAllocateInfo::default()
+551 | |                     .push_next(&mut dedicated)
+...   |
+555 | |                 None,
+556 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_image` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:559:17
+    |
+559 |                 device.destroy_image(image, None);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::bind_image_memory` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:564:9
+    |
+564 | /         device
+565 | |             .bind_image_memory(image, memory, 0)
+    | |________________________________________________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::free_memory` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:567:17
+    |
+567 |                 device.free_memory(memory, None);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_image` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:568:17
+    |
+568 |                 device.destroy_image(image, None);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::create_image_view` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:577:26
+    |
+577 |           let image_view = device
+    |  __________________________^
+578 | |             .create_image_view(
+579 | |                 &vk::ImageViewCreateInfo::default()
+580 | |                     .push_next(&mut ycbcr_info)
+...   |
+591 | |                 None,
+592 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::free_memory` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:594:17
+    |
+594 |                 device.free_memory(memory, None);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_image` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:595:17
+    |
+595 |                 device.destroy_image(image, None);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::allocate_descriptor_sets` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:602:30
+    |
+602 |           let descriptor_set = device
+    |  ______________________________^
+603 | |             .allocate_descriptor_sets(
+604 | |                 &vk::DescriptorSetAllocateInfo::default()
+605 | |                     .descriptor_pool(self.descriptor_pool)
+606 | |                     .set_layouts(&set_layouts),
+607 | |             )
+    | |_____________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_image_view` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:609:17
+    |
+609 |                 device.destroy_image_view(image_view, None);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::free_memory` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:610:17
+    |
+610 |                 device.free_memory(memory, None);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_image` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:611:17
+    |
+611 |                 device.destroy_image(image, None);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::update_descriptor_sets` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:626:9
+    |
+626 |         device.update_descriptor_sets(&writes, &[]);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::cmd_pipeline_barrier` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:656:9
+    |
+656 | /         device.cmd_pipeline_barrier(
+657 | |             command_buffer,
+658 | |             vk::PipelineStageFlags::TOP_OF_PIPE,
+659 | |             vk::PipelineStageFlags::FRAGMENT_SHADER,
+...   |
+662 | |             std::slice::from_ref(&barrier),
+663 | |         );
+    | |_________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\video\raw_vulkan_ycbcr.rs:632:5
+    |
+632 | /     unsafe fn record_commands(
+633 | |         &self,
+634 | |         device: &ash::Device,
+635 | |         command_buffer: vk::CommandBuffer,
+636 | |         slot: &AhbSlot,
+637 | |     ) {
+    | |_____^
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::cmd_begin_render_pass` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:670:9
+    |
+670 | /         device.cmd_begin_render_pass(
+671 | |             command_buffer,
+672 | |             &vk::RenderPassBeginInfo::default()
+673 | |                 .render_pass(self.render_pass)
+...   |
+680 | |             vk::SubpassContents::INLINE,
+681 | |         );
+    | |_________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::cmd_bind_pipeline` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:683:9
+    |
+683 | /         device.cmd_bind_pipeline(
+684 | |             command_buffer,
+685 | |             vk::PipelineBindPoint::GRAPHICS,
+686 | |             self.graphics_pipeline,
+687 | |         );
+    | |_________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::cmd_bind_descriptor_sets` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:689:9
+    |
+689 | /         device.cmd_bind_descriptor_sets(
+690 | |             command_buffer,
+691 | |             vk::PipelineBindPoint::GRAPHICS,
+692 | |             self.pipeline_layout,
+...   |
+695 | |             &[],
+696 | |         );
+    | |_________^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::cmd_draw` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:698:9
+    |
+698 |         device.cmd_draw(command_buffer, 3, 1, 0, 0);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::cmd_end_render_pass` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:699:9
+    |
+699 |         device.cmd_end_render_pass(command_buffer);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:713:22
+    |
+713 |         let result = (self.fn_get_ahb_props)(raw_device.handle(), buffer_ptr, &mut props);
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\video\raw_vulkan_ycbcr.rs:704:5
+    |
+704 | /     pub unsafe fn query_ahb_properties_struct(
+705 | |         &self,
+706 | |         raw_device: &ash::Device,
+707 | |         buffer_ptr: *mut std::ffi::c_void,
+708 | |     ) -> Option<(u64, AhbProps)> {
+    | |________________________________^
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `video::raw_vulkan_ycbcr::RawYcbcrPipeline::drop_slot` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:750:9
+    |
+750 |         self.drop_slot(device);
+    |         ^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\video\raw_vulkan_ycbcr.rs:740:5
+    |
+740 | /     pub unsafe fn process_ahb_frame(
+741 | |         &mut self,
+742 | |         device: &ash::Device,
+743 | |         command_buffer: vk::CommandBuffer,
+...   |
+746 | |         ahb_props: &AhbProps,
+747 | |     ) -> bool {
+    | |_____________^
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `video::raw_vulkan_ycbcr::RawYcbcrPipeline::create_slot` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:753:26
+    |
+753 |         let slot = match self.create_slot(device, buffer_ptr, external_format, ahb_props) {
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `video::raw_vulkan_ycbcr::RawYcbcrPipeline::record_commands` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:762:9
+    |
+762 |         self.record_commands(device, command_buffer, &slot);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `video::raw_vulkan_ycbcr::RawYcbcrPipeline::drop_slot` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:773:9
+    |
+773 |         self.drop_slot(device);
+    |         ^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> src\video\raw_vulkan_ycbcr.rs:769:5
+    |
+769 |     pub unsafe fn destroy(&mut self, device: &ash::Device) {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_descriptor_pool` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:775:9
+    |
+775 |         device.destroy_descriptor_pool(self.descriptor_pool, None);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_framebuffer` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:776:9
+    |
+776 |         device.destroy_framebuffer(self.output_framebuffer, None);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_image_view` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:777:9
+    |
+777 |         device.destroy_image_view(self.output_image_view, None);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_image` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:778:9
+    |
+778 |         device.destroy_image(self.output_image, None);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::free_memory` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:779:9
+    |
+779 |         device.free_memory(self.output_memory, None);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_render_pass` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:780:9
+    |
+780 |         device.destroy_render_pass(self.render_pass, None);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_pipeline` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:781:9
+    |
+781 |         device.destroy_pipeline(self.graphics_pipeline, None);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_pipeline_layout` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:782:9
+    |
+782 |         device.destroy_pipeline_layout(self.pipeline_layout, None);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_descriptor_set_layout` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:783:9
+    |
+783 |         device.destroy_descriptor_set_layout(self.descriptor_set_layout, None);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_sampler` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:784:9
+    |
+784 |         device.destroy_sampler(self.ycbcr_sampler, None);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning[E0133]: call to unsafe function `ash::Device::destroy_sampler_ycbcr_conversion` is unsafe and requires unsafe block
+   --> src\video\raw_vulkan_ycbcr.rs:785:9
+    |
+785 |         device.destroy_sampler_ycbcr_conversion(self.ycbcr_conversion, None);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+
+warning: type `ManagedBuffer` is more private than the item `render::pipeline::RenderPipeline::content_text_buffer_pool`
+   --> src\render\pipeline.rs:102:5
+    |
+102 |     pub content_text_buffer_pool: Vec<ManagedBuffer>,
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ field `render::pipeline::RenderPipeline::content_text_buffer_pool` is reachable at visibility `pub`
+    |
+note: but type `ManagedBuffer` is only usable at visibility `pub(self)`
+   --> src\render\pipeline.rs:37:1
+    |
+ 37 | struct ManagedBuffer {
+    | ^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(private_interfaces)]` on by default
+
+warning: type `ManagedBuffer` is more private than the item `render::pipeline::RenderPipeline::text_buffer_pool`
+   --> src\render\pipeline.rs:103:5
+    |
+103 |     pub text_buffer_pool: Vec<ManagedBuffer>,
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ field `render::pipeline::RenderPipeline::text_buffer_pool` is reachable at visibility `pub`
+    |
+note: but type `ManagedBuffer` is only usable at visibility `pub(self)`
+   --> src\render\pipeline.rs:37:1
+    |
+ 37 | struct ManagedBuffer {
+    | ^^^^^^^^^^^^^^^^^^^^
+
+warning: method `render_glass_panel` is never used
+ --> src\render\draw.rs:9:8
+  |
+7 | impl RenderPipeline {
+  | ------------------- method in this implementation
+8 |     // Helper to render a rounded rectangle (glass panel)
+9 |     fn render_glass_panel(&self, verts: &mut Vec<Vertex>, x: f32, y: f32, w: f32, h: f32, win_w: f32, win_h: f32, tint: [f32; 3], str...
+  |        ^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
 
 warning: `extern` fn uses type `AndroidApp`, which is not FFI-safe
-   --> src\lib.rs:184:37
+   --> src\lib.rs:176:37
     |
-184 | pub extern "C" fn android_main(app: android_activity::AndroidApp) {
+176 | pub extern "C" fn android_main(app: android_activity::AndroidApp) {
     |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not FFI-safe
     |
     = help: consider adding a `#[repr(C)]` or `#[repr(transparent)]` attribute to this struct
     = note: this struct has unspecified layout
     = note: `#[warn(improper_ctypes_definitions)]` on by default
 
-warning: calls to `std::mem::drop` with a value that implements `Copy` does nothing
-  --> src\video\vulkan_import.rs:76:13
-   |
-76 |             drop(props); // Освобождаем мутабельную ссылку на format_props
-   |             ^^^^^-----^
-   |                  |
-   |                  argument has type `AndroidHardwareBufferPropertiesANDROID<'_>`
-   |
-   = note: `#[warn(dropping_copy_types)]` on by default
-help: use `let _ = ...` to ignore the expression or result
-   |
-76 -             drop(props); // Освобождаем мутабельную ссылку на format_props
-76 +             let _ = props; // Освобождаем мутабельную ссылку на format_props
-   |
+warning: call to `.clone()` on a reference in this situation does nothing
+    --> src\render\pipeline.rs:1336:79
+     |
+1336 | ...                   self.ycbcr_ahb_props.as_ref().unwrap().clone();
+     |                                                             ^^^^^^^^
+     |
+     = note: the type `AhbProps` does not implement `Clone`, so calling `clone` on `&AhbProps` copies the reference, which does not do anything and can be removed
+     = note: `#[warn(noop_method_call)]` on by default
+help: remove this redundant call
+     |
+1336 -                                         self.ycbcr_ahb_props.as_ref().unwrap().clone();
+1336 +                                         self.ycbcr_ahb_props.as_ref().unwrap();
+     |
+help: if you meant to clone `AhbProps`, implement `Clone` for it
+    -->  src\video\vulkan_import.rs:9:1
+     |
+   9 + #[derive(Clone)]
+  10 | pub struct AhbProps {
+     |
 
 For more information about this error, try `rustc --explain E0133`.
-warning: `Liquify` (lib) generated 53 warnings (run `cargo fix --lib -p Liquify` to apply 14 suggestions)
-    Finished `release` profile [optimized] target(s) in 18.62s
- 'lib/arm64-v8a/libliquify.so'...
+warning: `Liquify` (lib) generated 109 warnings (run `cargo fix --lib -p Liquify` to apply 40 suggestions)
+    Finished `release` profile [optimized] target(s) in 4.16s
  'lib/arm64-v8a/libnativewindow.so'...
+ 'lib/arm64-v8a/libliquify.so'...
 Verifying alignment of C:\Users\user\Documents\testlocal\target\release\apk\liquify.apk (4)...
       49 AndroidManifest.xml (OK - compressed)
-     856 assets/background.mp4 (OK)
-134660876 assets/font_atlas.json (OK - compressed)
-134690156 assets/font_atlas.png (OK)
-135503428 assets/icons_sdf.png (OK)
-135555224 assets/temp_icon.png (OK)
-135968178 lib/arm64-v8a/libliquify.so (OK - compressed)
-139624214 lib/arm64-v8a/libnativewindow.so (OK - compressed)
+     848 assets/1.mp4 (OK)
+134660868 assets/background.mp4 (OK)
+182801488 assets/temp_icon.png (OK)
+183214447 lib/arm64-v8a/libnativewindow.so (OK - compressed)
+183217113 lib/arm64-v8a/libliquify.so (OK - compressed)
 Verification successful
 Signing `C:\Users\user\Documents\testlocal\target\release\apk\liquify.apk` with keystore `C:/Users/user/.android/debug.keystore`
 2. Installing APK... 
