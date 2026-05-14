@@ -1,14 +1,13 @@
-mod ecs;
-mod calculator;
-mod font;
-mod render;
-mod ui;
-mod input;
-mod video;
+pub mod ecs;
+pub mod calculator;
+pub mod render;
+pub mod ui;
+pub mod input;
+pub mod video;
 
-use render::RenderPipeline;
-use input::{InputState, InputAction};
-use ecs::systems;
+pub use render::RenderPipeline;
+pub use input::{InputState, InputAction};
+pub use ecs::systems;
 
 use std::io::{self, Write};
 use std::time::Instant;
@@ -62,7 +61,7 @@ fn vibrate_android(app: &AndroidApp, ms: i64) {
     }
 }
 
-struct AppState {
+pub struct AppState {
     renderer: RenderPipeline,
     world: ecs::World,
     input: InputState,
@@ -77,15 +76,12 @@ struct AppState {
 }
 
 impl AppState {
-    async fn new(window: &Window, #[cfg(target_os = "android")] android_app: AndroidApp) -> Self {
+    pub async fn new(window: &Window, #[cfg(target_os = "android")] android_app: AndroidApp) -> Self {
         let size = window.inner_size();
         let scale_factor = window.scale_factor() as f32;
         
-        let font_data = include_bytes!("../fonts/Roboto-Bold.ttf");
-        let atlas_png = include_bytes!("../assets/font_atlas.png");
-        let atlas_json = include_str!("../assets/font_atlas.json");
-        
-        let renderer = RenderPipeline::new(window, font_data, atlas_png, atlas_json).await;
+        let font_data = include_bytes!("../fonts/PlusJakartaSans-ExtraBold.ttf");
+        let renderer = RenderPipeline::new(window, font_data).await;
 
         let mut world = ecs::World::new();
         systems::system_ui_init(&mut world);
@@ -106,7 +102,7 @@ impl AppState {
         }
     }
 
-    fn on_resize(&mut self, width: u32, height: u32, scale_factor: f32) {
+    pub fn on_resize(&mut self, width: u32, height: u32, scale_factor: f32) {
         self.window_size = (width as f32, height as f32);
         self.scale_factor = scale_factor;
         self.renderer.resize(width, height, scale_factor);
@@ -114,12 +110,12 @@ impl AppState {
         self.input.scroll.set_content_height(content_h);
     }
 
-    fn on_mouse_move(&mut self, x: f32, y: f32) {
+    pub fn on_mouse_move(&mut self, x: f32, y: f32) {
         self.input.on_mouse_move(x, y);
-        // systems::system_input_ui_hover(&mut self.world, &mut self.input);
+        systems::system_input_ui_hover(&mut self.world, &mut self.input);
     }
 
-    fn on_mouse_press(&mut self) {
+    pub fn on_mouse_press(&mut self) {
         self.input.on_mouse_press();
         if let Some(idx) = self.input.hovered_button {
             self.input.last_action = InputAction::ButtonPress(idx);
@@ -128,15 +124,15 @@ impl AppState {
         }
     }
 
-    fn on_mouse_release(&mut self) {
+    pub fn on_mouse_release(&mut self) {
         self.input.on_mouse_release();
     }
 
-    fn on_key(&mut self, ch: char) {
+    pub fn on_key(&mut self, ch: char) {
         self.input.last_action = InputAction::Key(ch);
     }
 
-    fn frame(&mut self) {
+    pub fn frame(&mut self) {
         let now = Instant::now();
         let dt = now.duration_since(self.last_frame_time).as_secs_f32();
         self.last_frame_time = now;
@@ -158,6 +154,8 @@ impl AppState {
         // Update scroll physics (inertia + rubber band)
         self.input.scroll.update(dt.min(0.05), self.window_size.1);
 
+        systems::system_navigation(&mut self.world, &self.input);
+
         systems::system_render(
             &mut self.world,
             &mut self.renderer,
@@ -171,13 +169,7 @@ impl AppState {
     }
 }
 
-#[cfg(not(target_os = "android"))]
-fn main() {
-    #[cfg(target_os = "android")]
-    run_app(EventLoop::<()>::with_user_event(), None);
-    #[cfg(not(target_os = "android"))]
-    run_app(EventLoop::<()>::with_user_event());
-}
+// main moved to src/main.rs for binary target
 
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
@@ -197,7 +189,7 @@ pub extern "C" fn android_main(app: android_activity::AndroidApp) {
     run_app(event_loop_builder, Some(app_clone));
 }
 
-fn run_app(mut event_loop_builder: EventLoopBuilder<()>, #[cfg(target_os = "android")] android_app: Option<AndroidApp>) {
+pub fn run_app(mut event_loop_builder: EventLoopBuilder<()>, #[cfg(target_os = "android")] android_app: Option<AndroidApp>) {
     let event_loop = event_loop_builder.build().unwrap();
 
     let mut window: Option<Window> = None;

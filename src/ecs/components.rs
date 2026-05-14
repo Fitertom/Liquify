@@ -72,6 +72,47 @@ pub struct UIImage {
     pub path: String,
 }
 
+// Player Components
+#[derive(Clone)]
+pub struct Player {
+    pub title: String,
+    pub artist: String,
+    pub progress: f32, // 0.0 to 1.0
+    pub duration: f32, // in seconds
+    pub is_playing: bool,
+    pub is_liked: bool,
+}
+
+#[derive(Clone)]
+pub struct MiniPlayer {
+    pub title: String,
+    pub artist: String,
+    pub progress: f32,
+    pub is_playing: bool,
+}
+
+#[derive(Clone)]
+pub struct PlayerControl {
+    pub control_type: ControlType,
+}
+
+#[derive(Clone, Copy, PartialEq)]
+pub enum ControlType {
+    Prev,
+    Play,
+    Next,
+    Shuffle,
+    Repeat,
+    Like,
+    Close,
+}
+
+#[derive(Clone)]
+pub struct ProgressBar {
+    pub value: f32,
+    pub max: f32,
+}
+
 pub fn type_id_of<T: 'static>() -> TypeId {
     TypeId::of::<T>()
 }

@@ -2,21 +2,30 @@
 name = "Liquify"
 version = "0.5.0"
 edition = "2024"
+build = "build.rs"
 
 [lib]
 name = "liquify"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 path = "src/lib.rs"
 
+[[bin]]
+name = "liquify"
+path = "src/main.rs"
+required-features = ["desktop"]
+
+[features]
+desktop = []
+
 [dependencies]
-wgpu = { version = "22.1.0", default-features = false, features = ["wgsl"] }
+wgpu = { version = "29.0", default-features = false, features = ["wgsl", "vulkan"]}
 winit = { version = "0.30.5", default-features = false, features = ["rwh_06", "android-native-activity"] }
 fontdue = "0.8"
 bytemuck = { version = "1.15", features = ["derive"] }
 pollster = "0.3"
 image = { version = "0.25", default-features = false, features = ["png"] }
 jni = "0.21"
-glyphon = "0.6.0"
+glyphon = "0.11.0"
 raw-window-handle = "0.6"
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
@@ -32,8 +41,8 @@ libc = "0.2"
 android_logger = "0.13"
 log = "0.4"
 ash = "0.38"
-wgpu = { version = "22.1", features = ["wgc"] }
-wgpu-hal = "22"
+wgpu = { version = "29.0"}
+wgpu-hal = "29.0"
 android-activity = { version = "0.6", features = ["native-activity"] }
 
 [profile.release]

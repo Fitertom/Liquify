@@ -8,9 +8,6 @@ var background_texture: texture_2d<f32>;
 var blurred_texture: texture_2d<f32>;
 
 @group(0) @binding(3)
-var icon_texture: texture_2d<f32>;
-
-@group(0) @binding(4)
 var cover_texture: texture_2d<f32>;
 
 struct VertexInput {
@@ -136,14 +133,7 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
         return vec4<f32>(glass, mask);
     }
 
-    // --- ICONS (MSDF) ---
-    if (input.screen_uv.x == -1.0) {
-        let msd = textureSample(icon_texture, my_sampler, input.tex_coord).rgb;
-        let sd = median(msd.r, msd.g, msd.b);
-        let fw = fwidth(sd) * 0.75;
-        let alpha = smoothstep(0.5 - fw, 0.5 + fw, sd) * input.color.a;
-        return vec4<f32>(input.color.rgb, alpha);
-    }
+
 
     return vec4<f32>(input.color.rgb, 1.0);
 }

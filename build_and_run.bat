@@ -8,7 +8,7 @@ echo 0. Ensuring target... >> build_log.txt
 rustup target add aarch64-linux-android >> build_log.txt 2>&1
 
 echo 1. Building and Packaging APK... >> build_log.txt
-cargo apk build --release >> build_log.txt 2>&1
+cargo apk build --release --lib >> build_log.txt 2>&1
 if %ERRORLEVEL% NEQ 0 (
     echo [ERROR] Build failed. Check build_log.txt >> build_log.txt
     type build_log.txt

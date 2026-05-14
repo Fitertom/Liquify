@@ -1,6 +1,7 @@
 use crate::ecs::world::World;
 use crate::ecs::components::*;
-use crate::input::{InputState};
+use crate::input::InputState;
+use crate::InputAction;
 use crate::render::RenderPipeline;
 
 pub fn system_ui_init(world: &mut World) {
@@ -9,9 +10,9 @@ pub fn system_ui_init(world: &mut World) {
 
     // Header
     let header = world.create_entity();
-    world.add_component(header, UIHeader { 
-        title: "Liquify".to_string(), 
-        greeting: "Добрый вечер".to_string() 
+    world.add_component(header, UIHeader {
+        title: "Liquify".to_string(),
+        greeting: "Добрый вечер".to_string()
     });
     world.add_component(header, Position { x: 0.0, y: 0.0 });
     world.add_component(header, Renderable { visible: true });
@@ -220,6 +221,110 @@ pub fn system_ui_init(world: &mut World) {
         world.add_component(btn, Size { width: 0.0, height: 0.0 });
         world.add_component(btn, Renderable { visible: true });
     }
+
+    // --- FULLSCREEN PLAYER (initially hidden) ---
+    let player = world.create_entity();
+    world.add_component(player, Player {
+        title: "Недавно добавлено".to_string(),
+        artist: "Выберите трек".to_string(),
+        progress: 0.0,
+        duration: 215.0,
+        is_playing: false,
+        is_liked: false,
+    });
+    world.add_component(player, Position { x: 0.0, y: 0.0 });
+    world.add_component(player, Size { width: 0.0, height: 0.0 });
+    world.add_component(player, Renderable { visible: false });
+    world.add_component(player, Page("p".to_string()));
+
+    // Player controls (Prev, Play, Next)
+    let control_types = [("prev", ControlType::Prev), ("play", ControlType::Play), ("next", ControlType::Next)];
+    for (id, ctrl_type) in control_types {
+        let ctrl = world.create_entity();
+        world.add_component(ctrl, PlayerControl { control_type: ctrl_type });
+        world.add_component(ctrl, Position { x: 0.0, y: 0.0 });
+        world.add_component(ctrl, Size { width: 0.0, height: 0.0 });
+        world.add_component(ctrl, Renderable { visible: false });
+        world.add_component(ctrl, Page("p".to_string()));
+    }
+
+    // Like button
+    let like_btn = world.create_entity();
+    world.add_component(like_btn, PlayerControl { control_type: ControlType::Like });
+    world.add_component(like_btn, Position { x: 0.0, y: 0.0 });
+    world.add_component(like_btn, Size { width: 0.0, height: 0.0 });
+    world.add_component(like_btn, Renderable { visible: false });
+    world.add_component(like_btn, Page("p".to_string()));
+
+    // Shuffle and Repeat buttons
+    let sr_types = [("shuffle", ControlType::Shuffle), ("repeat", ControlType::Repeat)];
+    for (id, ctrl_type) in sr_types {
+        let ctrl = world.create_entity();
+        world.add_component(ctrl, PlayerControl { control_type: ctrl_type });
+        world.add_component(ctrl, Position { x: 0.0, y: 0.0 });
+        world.add_component(ctrl, Size { width: 0.0, height: 0.0 });
+        world.add_component(ctrl, Renderable { visible: false });
+        world.add_component(ctrl, Page("p".to_string()));
+    }
+
+    // Close button (for full player)
+    let close_btn = world.create_entity();
+    world.add_component(close_btn, PlayerControl { control_type: ControlType::Close });
+    world.add_component(close_btn, Position { x: 0.0, y: 0.0 });
+    world.add_component(close_btn, Size { width: 0.0, height: 0.0 });
+    world.add_component(close_btn, Renderable { visible: false });
+    world.add_component(close_btn, Page("p".to_string()));
+
+    // Progress bar
+    let progress = world.create_entity();
+    world.add_component(progress, ProgressBar { value: 0.0, max: 1.0 });
+    world.add_component(progress, Position { x: 0.0, y: 0.0 });
+    world.add_component(progress, Size { width: 0.0, height: 0.0 });
+    world.add_component(progress, Renderable { visible: false });
+    world.add_component(progress, Page("p".to_string()));
+
+    // --- MINI PLAYER (visible by default with sample track) ---
+    let mini = world.create_entity();
+    world.add_component(mini, MiniPlayer {
+        title: "Недавно добавлено".to_string(),
+        artist: "Выберите трек".to_string(),
+        progress: 0.35,
+        is_playing: true,
+    });
+    world.add_component(mini, Position { x: 0.0, y: 0.0 });
+    world.add_component(mini, Size { width: 0.0, height: 0.0 });
+    world.add_component(mini, Renderable { visible: true });
+    world.add_component(mini, Page("min".to_string()));
+
+    // Mini player album art entity
+    let mini_art = world.create_entity();
+    world.add_component(mini_art, UIImage { path: "assets/temp_icon.png".to_string() });
+    world.add_component(mini_art, Position { x: 0.0, y: 0.0 });
+    world.add_component(mini_art, Size { width: 0.0, height: 0.0 });
+    world.add_component(mini_art, Renderable { visible: true });
+    world.add_component(mini_art, Page("min".to_string()));
+
+    // Mini player controls (play/pause, next)
+    let mini_controls = [
+        ("play", ControlType::Play),
+        ("next", ControlType::Next),
+    ];
+    for (id, ctrl_type) in mini_controls {
+        let ctrl = world.create_entity();
+        world.add_component(ctrl, PlayerControl { control_type: ctrl_type });
+        world.add_component(ctrl, Position { x: 0.0, y: 0.0 });
+        world.add_component(ctrl, Size { width: 0.0, height: 0.0 });
+        world.add_component(ctrl, Renderable { visible: true });
+        world.add_component(ctrl, Page("min".to_string()));
+    }
+
+    // Mini player progress bar
+    let mini_prog = world.create_entity();
+    world.add_component(mini_prog, ProgressBar { value: 0.35, max: 1.0 });
+    world.add_component(mini_prog, Position { x: 0.0, y: 0.0 });
+    world.add_component(mini_prog, Size { width: 0.0, height: 0.0 });
+    world.add_component(mini_prog, Renderable { visible: true });
+    world.add_component(mini_prog, Page("min".to_string()));
 }
 
 pub fn system_layout(world: &mut World, win_w: f32, win_h: f32, scale_factor: f32) -> f32 {
@@ -484,7 +589,452 @@ pub fn system_layout(world: &mut World, win_w: f32, win_h: f32, scale_factor: f3
         }
     }
 
+    // --- FULLSCREEN PLAYER LAYOUT ---
+    let player_eids: Vec<u32> = world.query_with_mut::<Player>();
+    if !player_eids.is_empty() {
+        let player_eid = player_eids[0];
+        let player_visible = world.get_component::<Renderable>(player_eid)
+            .map(|r| r.visible).unwrap_or(false);
+
+        if player_visible {
+            // Position player full-screen (covers entire window)
+            if let Some(pos) = world.get_component_mut::<Position>(player_eid) {
+                pos.x = 0.0;
+                pos.y = 0.0;
+            }
+            if let Some(size) = world.get_component_mut::<Size>(player_eid) {
+                size.width = win_w;
+                size.height = win_h;
+            }
+
+            // Layout album art (large, centered top)
+            let art_size = if win_w < win_h { win_w } else { win_h } * 0.45;
+            let art_x = (win_w - art_size) / 2.0;
+            let art_y = win_h * 0.18; // Start around 18% from top
+
+            // Find album art entity (has no specific component but belongs to player page)
+            for &eid in &entities {
+                if let Some(Page(p)) = world.get_component::<Page>(eid) {
+                    if p == "p" && world.get_component::<UIImage>(eid).is_some() {
+                        if let Some(pos) = world.get_component_mut::<Position>(eid) {
+                            pos.x = art_x;
+                            pos.y = art_y;
+                        }
+                        if let Some(size) = world.get_component_mut::<Size>(eid) {
+                            size.width = art_size;
+                            size.height = art_size;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Track info (title and artist)
+            let text_y = art_y + art_size + 40.0 * s;
+            for &eid in &entities {
+                if let Some(Page(p)) = world.get_component::<Page>(eid) {
+                    if p == "p" && world.get_component::<UIHeader>(eid).is_some() {
+                        if let Some(pos) = world.get_component_mut::<Position>(eid) {
+                            pos.x = 20.0 * s;
+                            pos.y = text_y;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Like button (top right)
+            for &eid in &entities {
+                if let Some(Page(p)) = world.get_component::<Page>(eid) {
+                    if p == "p" && world.get_component::<PlayerControl>(eid).map(|c| c.control_type == ControlType::Like).unwrap_or(false) {
+                        if let Some(pos) = world.get_component_mut::<Position>(eid) {
+                            pos.x = win_w - 60.0 * s;
+                            pos.y = 20.0 * s;
+                        }
+                        if let Some(size) = world.get_component_mut::<Size>(eid) {
+                            size.width = 40.0 * s;
+                            size.height = 40.0 * s;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Close button (top left)
+            for &eid in &entities {
+                if let Some(Page(p)) = world.get_component::<Page>(eid) {
+                    if p == "p" && world.get_component::<PlayerControl>(eid).map(|c| c.control_type == ControlType::Close).unwrap_or(false) {
+                        if let Some(pos) = world.get_component_mut::<Position>(eid) {
+                            pos.x = 20.0 * s;
+                            pos.y = 20.0 * s;
+                        }
+                        if let Some(size) = world.get_component_mut::<Size>(eid) {
+                            size.width = 40.0 * s;
+                            size.height = 40.0 * s;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Controls (Prev, Play, Next) - bottom area
+            let controls_y = win_h - 200.0 * s;
+            let btn_size = 72.0 * s;
+            let play_size = 72.0 * s * 1.3; // Play button slightly larger
+            let total_width = (btn_size * 2.0) + play_size + 40.0 * s;
+            let start_x = (win_w - total_width) / 2.0;
+
+            for &eid in &entities {
+                if let Some(Page(p)) = world.get_component::<Page>(eid) {
+                    if p == "p" && world.get_component::<PlayerControl>(eid).is_some() {
+                        let ctrl = world.get_component::<PlayerControl>(eid).unwrap();
+                        let idx = match ctrl.control_type {
+                            ControlType::Prev => 0,
+                            ControlType::Play => 1,
+                            ControlType::Next => 2,
+                            _ => continue,
+                        };
+                        let x = start_x + idx as f32 * (btn_size + 20.0 * s);
+                        if let Some(pos) = world.get_component_mut::<Position>(eid) {
+                            pos.x = x;
+                            pos.y = controls_y;
+                        }
+                        if let Some(size) = world.get_component_mut::<Size>(eid) {
+                            size.width = if idx == 1 { play_size } else { btn_size };
+                            size.height = if idx == 1 { play_size } else { btn_size };
+                        }
+                    }
+                }
+            }
+
+            // Shuffle and Repeat buttons
+            let sr_y = controls_y + 100.0 * s;
+            let sr_start_x = win_w * 0.35;
+            for &eid in &entities {
+                if let Some(Page(p)) = world.get_component::<Page>(eid) {
+                    if p == "p" && world.get_component::<PlayerControl>(eid).is_some() {
+                        let ctrl = world.get_component::<PlayerControl>(eid).unwrap();
+                        let idx = match ctrl.control_type {
+                            ControlType::Shuffle => 0,
+                            ControlType::Repeat => 1,
+                            _ => continue,
+                        };
+                        let x = sr_start_x + idx as f32 * 80.0 * s;
+                        if let Some(pos) = world.get_component_mut::<Position>(eid) {
+                            pos.x = x;
+                            pos.y = sr_y;
+                        }
+                        if let Some(size) = world.get_component_mut::<Size>(eid) {
+                            size.width = 40.0 * s;
+                            size.height = 40.0 * s;
+                        }
+                    }
+                }
+            }
+
+            // Progress bar (slider)
+            let prog_y = controls_y - 60.0 * s;
+            for &eid in &entities {
+                if let Some(Page(p)) = world.get_component::<Page>(eid) {
+                    if p == "p" && world.get_component::<ProgressBar>(eid).is_some() {
+                        if let Some(pos) = world.get_component_mut::<Position>(eid) {
+                            pos.x = 28.0 * s;
+                            pos.y = prog_y;
+                        }
+                        if let Some(size) = world.get_component_mut::<Size>(eid) {
+                            size.width = win_w - 56.0 * s;
+                            size.height = 18.0 * s;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // --- MINI PLAYER LAYOUT ---
+    let mini_eids: Vec<u32> = world.query_with_mut::<MiniPlayer>();
+    if !mini_eids.is_empty() {
+        let mini_eid = mini_eids[0];
+        let mini_visible = world.get_component::<Renderable>(mini_eid)
+            .map(|r| r.visible).unwrap_or(false);
+
+        if mini_visible {
+            // Mini player positioned above nav bar
+            let nav_gap = 8.0 * s;
+            let nav_outer_gap = 12.0 * s;
+            let mini_h = 58.0 * s;
+            let mini_w = (win_w - 20.0 * s).min(386.0 * s);
+            let mini_x = (win_w - mini_w) / 2.0;
+            let mini_y = win_h - mini_h - nav_h - nav_gap - nav_outer_gap;
+
+            if let Some(pos) = world.get_component_mut::<Position>(mini_eid) {
+                pos.x = mini_x;
+                pos.y = mini_y;
+            }
+            if let Some(size) = world.get_component_mut::<Size>(mini_eid) {
+                size.width = mini_w;
+                size.height = mini_h;
+            }
+
+            // Mini player album art (34x34)
+            let art_x = mini_x + 12.0 * s;
+            let art_y = mini_y + (mini_h - 34.0 * s) / 2.0;
+            for &eid in &entities {
+                if let Some(Page(p)) = world.get_component::<Page>(eid) {
+                    if p == "min" && world.get_component::<UIImage>(eid).is_some() {
+                        if let Some(pos) = world.get_component_mut::<Position>(eid) {
+                            pos.x = art_x;
+                            pos.y = art_y;
+                        }
+                        if let Some(size) = world.get_component_mut::<Size>(eid) {
+                            size.width = 34.0 * s;
+                            size.height = 34.0 * s;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Mini player text (title and artist)
+            let text_x = art_x + 42.0 * s;
+            let text_y = mini_y + (mini_h - 24.0 * s) / 2.0;
+            for &eid in &entities {
+                if let Some(Page(p)) = world.get_component::<Page>(eid) {
+                    if p == "min" && world.get_component::<UIHeader>(eid).is_some() {
+                        if let Some(pos) = world.get_component_mut::<Position>(eid) {
+                            pos.x = text_x;
+                            pos.y = text_y;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Mini player controls (play/pause and next)
+            let pb_x = mini_x + mini_w - 80.0 * s;
+            let pb_y = mini_y + (mini_h - 26.0 * s) / 2.0;
+            for &eid in &entities {
+                if let Some(Page(p)) = world.get_component::<Page>(eid) {
+                    if p == "min" && world.get_component::<PlayerControl>(eid).is_some() {
+                        let ctrl = world.get_component::<PlayerControl>(eid).unwrap();
+                        let x = if ctrl.control_type == ControlType::Play {
+                            pb_x
+                        } else {
+                            pb_x + 40.0 * s
+                        };
+                        if let Some(pos) = world.get_component_mut::<Position>(eid) {
+                            pos.x = x;
+                            pos.y = pb_y;
+                        }
+                        if let Some(size) = world.get_component_mut::<Size>(eid) {
+                            size.width = 26.0 * s;
+                            size.height = 26.0 * s;
+                        }
+                    }
+                }
+            }
+
+            // Mini player progress bar
+            let prog_x = mini_x + 14.0 * s;
+            let prog_y = mini_y + mini_h - 2.0 * s;
+            for &eid in &entities {
+                if let Some(Page(p)) = world.get_component::<Page>(eid) {
+                    if p == "min" && world.get_component::<ProgressBar>(eid).is_some() {
+                        if let Some(pos) = world.get_component_mut::<Position>(eid) {
+                            pos.x = prog_x;
+                            pos.y = prog_y;
+                        }
+                        if let Some(size) = world.get_component_mut::<Size>(eid) {
+                            size.width = mini_w - 28.0 * s;
+                            size.height = 2.0;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     active_page_max_y + 100.0 * s
+}
+
+pub fn system_input_ui_hover(world: &mut World, input: &mut InputState) {
+    let (mx, my) = input.mouse_pos;
+    input.hovered_button = None;
+
+    let in_bounds = |mx: f32, my: f32, pos: &Position, size: &Size| {
+        mx >= pos.x && mx <= pos.x + size.width && my >= pos.y && my <= pos.y + size.height
+    };
+
+    // 1) Nav buttons (top priority)
+    for eid in world.query_with_mut::<UINavButton>() {
+        if let (Some(pos), Some(size)) = (world.get_component::<Position>(eid), world.get_component::<Size>(eid)) {
+            if in_bounds(mx, my, pos, size) {
+                input.hovered_button = Some(eid as usize);
+                return;
+            }
+        }
+    }
+
+    // 2) Player controls (close, like, shuffle, repeat, prev, play, next)
+    for eid in world.query_with_mut::<PlayerControl>() {
+        if let Some(renderable) = world.get_component::<Renderable>(eid) {
+            if !renderable.visible { continue; }
+        }
+        if let (Some(pos), Some(size)) = (world.get_component::<Position>(eid), world.get_component::<Size>(eid)) {
+            if in_bounds(mx, my, pos, size) {
+                input.hovered_button = Some(eid as usize);
+                return;
+            }
+        }
+    }
+
+    // 3) Mini-player (click anywhere to open full player)
+    for eid in world.query_with_mut::<MiniPlayer>() {
+        if let Some(renderable) = world.get_component::<Renderable>(eid) {
+            if !renderable.visible { continue; }
+        }
+        if let (Some(pos), Some(size)) = (world.get_component::<Position>(eid), world.get_component::<Size>(eid)) {
+            if in_bounds(mx, my, pos, size) {
+                input.hovered_button = Some(eid as usize);
+                return;
+            }
+        }
+    }
+}
+
+pub fn system_navigation(world: &mut World, input: &InputState) {
+    match input.last_action {
+        InputAction::ButtonPress(eid) => {
+            let eid = eid as u32;
+
+            // Navigation bar buttons
+            if let Some(btn) = world.get_component::<UINavButton>(eid) {
+                let tab = btn.id.clone();
+                // Update active tab
+                for nav_eid in world.query_with_mut::<UINavBar>() {
+                    if let Some(nav) = world.get_component_mut::<UINavBar>(nav_eid) {
+                        nav.active_tab = tab.clone();
+                    }
+                }
+                for btn_eid in world.query_with_mut::<UINavButton>() {
+                    if let Some(b) = world.get_component_mut::<UINavButton>(btn_eid) {
+                        b.is_active = b.id == tab;
+                    }
+                }
+                // Tab switch: close full player if open, ensure mini-player visible
+                let all_ids: Vec<u32> = world.entities.all_entities().iter().map(|e| e.id).collect();
+                for entity_id in all_ids {
+                    let page_tag = match world.get_component::<Page>(entity_id) {
+                        Some(Page(p)) => p.clone(),
+                        _ => continue,
+                    };
+                    if let Some(mut r) = world.get_component_mut::<Renderable>(entity_id) {
+                        if page_tag == "p" {
+                            r.visible = false;
+                        } else if page_tag == "min" {
+                            r.visible = true;
+                        }
+                    }
+                }
+            }
+            // Mini-player click: open full player, hide mini
+            else if world.get_component::<MiniPlayer>(eid).is_some() {
+                let all_ids: Vec<u32> = world.entities.all_entities().iter().map(|e| e.id).collect();
+                for entity_id in all_ids {
+                    let page_tag = match world.get_component::<Page>(entity_id) {
+                        Some(Page(p)) => p.clone(),
+                        _ => continue,
+                    };
+                    if let Some(mut r) = world.get_component_mut::<Renderable>(entity_id) {
+                        if page_tag == "p" {
+                            r.visible = true;
+                        } else if page_tag == "min" {
+                            r.visible = false;
+                        }
+                    }
+                }
+            }
+            // Player control buttons
+            else if let Some(ctrl) = world.get_component::<PlayerControl>(eid) {
+                match ctrl.control_type {
+                    ControlType::Close => {
+                        // Close full player, show mini
+                        let all_ids: Vec<u32> = world.entities.all_entities().iter().map(|e| e.id).collect();
+                        for entity_id in all_ids {
+                            let page_tag = match world.get_component::<Page>(entity_id) {
+                                Some(Page(p)) => p.clone(),
+                                _ => continue,
+                            };
+                            if let Some(mut r) = world.get_component_mut::<Renderable>(entity_id) {
+                                if page_tag == "p" {
+                                    r.visible = false;
+                                } else if page_tag == "min" {
+                                    r.visible = true;
+                                }
+                            }
+                        }
+                    }
+                    ControlType::Play => {
+                        for player_eid in world.query_with_mut::<Player>() {
+                            if let Some(mut p) = world.get_component_mut::<Player>(player_eid) {
+                                p.is_playing = !p.is_playing;
+                            }
+                        }
+                        for mini_eid in world.query_with_mut::<MiniPlayer>() {
+                            if let Some(mut m) = world.get_component_mut::<MiniPlayer>(mini_eid) {
+                                m.is_playing = !m.is_playing;
+                            }
+                        }
+                    }
+                    ControlType::Like => {
+                        for player_eid in world.query_with_mut::<Player>() {
+                            if let Some(mut p) = world.get_component_mut::<Player>(player_eid) {
+                                p.is_liked = !p.is_liked;
+                            }
+                        }
+                    }
+                    ControlType::Prev => {
+                        for player_eid in world.query_with_mut::<Player>() {
+                            if let Some(mut p) = world.get_component_mut::<Player>(player_eid) {
+                                p.progress = 0.0;
+                            }
+                        }
+                    }
+                    ControlType::Next => {
+                        for player_eid in world.query_with_mut::<Player>() {
+                            if let Some(mut p) = world.get_component_mut::<Player>(player_eid) {
+                                p.progress = 0.0;
+                            }
+                        }
+                    }
+                    ControlType::Shuffle | ControlType::Repeat => {
+                        // No behavior yet
+                    }
+                }
+            }
+        }
+        InputAction::Key(ch) => {
+            if ch == '\x1b' {
+                let all_ids: Vec<u32> = world.entities.all_entities().iter().map(|e| e.id).collect();
+                for entity_id in all_ids {
+                    let page_tag = match world.get_component::<Page>(entity_id) {
+                        Some(Page(p)) => p.clone(),
+                        _ => continue,
+                    };
+                    if let Some(mut r) = world.get_component_mut::<Renderable>(entity_id) {
+                        if page_tag == "p" {
+                            r.visible = false;
+                        } else if page_tag == "min" {
+                            r.visible = true;
+                        }
+                    }
+                }
+            }
+        }
+        _ => {}
+    }
 }
 
 pub fn system_render(

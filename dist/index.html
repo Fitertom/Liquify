@@ -1,0 +1,2616 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#121212">
+  <title>Liquify</title>
+  <style>html,body{background:#121212;}</style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.7/jsmediatags.min.js"></script>
+  <link rel=stylesheet href=liquify-player.css>
+  <style>
+    /* Inlined Playlist Card Styles (Aesthetic Revert) */
+    body,
+    #app {
+      transform: translate3d(0, 0, 0);
+    }
+
+    .view.active {
+      animation: none !important;
+      opacity: 1 !important;
+    }
+
+    .plc {
+      min-width: 145px;
+      border-radius: 12px;
+      padding: 12px;
+      cursor: pointer;
+      position: relative;
+      background: transparent !important;
+      backdrop-filter: blur(2px) saturate(1.6) !important;
+      -webkit-backdrop-filter: blur(2px) saturate(1.6) !important;
+      backdrop-filter: var(--glass-filter) blur(var(--glass-blur, 1.5px)) saturate(1.6) !important;
+      -webkit-backdrop-filter: var(--glass-filter) blur(var(--glass-blur, 1.5px)) saturate(1.6) !important;
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      transform: translate3d(0, 0, 0) !important;
+      will-change: transform, backdrop-filter !important;
+      isolation: isolate !important;
+      backface-visibility: hidden !important;
+      perspective: 1000px;
+      transition: none !important;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    .plc:active {
+      transform: scale(0.96) !important;
+    }
+
+    .pln {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      z-index: 2;
+      position: relative;
+      pointer-events: none;
+    }
+
+    .plm {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.4);
+      margin-top: 4px;
+      z-index: 2;
+      position: relative;
+      pointer-events: none;
+    }
+
+    /* ── Custom Wallpaper Buttons ── */
+    .lq-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.85);
+      cursor: pointer;
+      transition: background 0.18s, border-color 0.18s, transform 0.12s, box-shadow 0.18s;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      outline: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .lq-btn:hover {
+      background: rgba(255,255,255,0.13);
+      border-color: rgba(255,255,255,0.22);
+      box-shadow: 0 3px 14px rgba(0,0,0,0.25);
+    }
+    .lq-btn:active {
+      transform: scale(0.95);
+      background: rgba(255,255,255,0.18);
+    }
+    .lq-btn--pick {
+      color: rgba(255,255,255,0.9);
+    }
+    .lq-btn--pick:hover {
+      border-color: rgba(255,255,255,0.35);
+    }
+    .lq-btn--reset {
+      color: rgba(255, 110, 110, 0.9);
+      border-color: rgba(255, 80, 80, 0.2);
+      background: rgba(255, 60, 60, 0.07);
+    }
+    .lq-btn--reset:hover {
+      background: rgba(255, 60, 60, 0.14);
+      border-color: rgba(255, 80, 80, 0.35);
+    }
+
+    /* ── Custom Slider ── */
+    .lq-slider-wrap {
+      width: 130px;
+      display: flex;
+      align-items: center;
+    }
+    .lq-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 18px;
+      background: transparent;
+      outline: none;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+    }
+    .lq-slider::-webkit-slider-container {
+      height: 18px;
+      display: flex;
+      align-items: center;
+    }
+    .lq-slider::-webkit-slider-runnable-track {
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+    }
+    .lq-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.15), 0 2px 8px rgba(0,0,0,0.35);
+      cursor: pointer;
+      margin-top: -7px;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .lq-slider:hover::-webkit-slider-thumb {
+      transform: scale(1.2);
+      box-shadow: 0 0 0 5px rgba(255,255,255,0.18), 0 3px 12px rgba(0,0,0,0.4);
+    }
+    .lq-slider::-moz-range-track {
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+    }
+    .lq-slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      border: none;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.15), 0 2px 8px rgba(0,0,0,0.35);
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .lq-slider:hover::-moz-range-thumb {
+      transform: scale(1.2);
+      box-shadow: 0 0 0 5px rgba(255,255,255,0.18), 0 3px 12px rgba(0,0,0,0.4);
+    }
+    .lq-slider::-moz-range-progress {
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.55);
+    }
+
+    /* ── Custom Toggle Checkbox ── */
+    .lq-toggle {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .lq-toggle input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+    .lq-toggle-track {
+      width: 46px;
+      height: 26px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.14);
+      position: relative;
+      transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.2);
+    }
+    .lq-toggle input:checked ~ .lq-toggle-track {
+      background: rgba(255,255,255,0.28);
+      border-color: rgba(255,255,255,0.35);
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.1), 0 0 12px rgba(255,255,255,0.1);
+    }
+    .lq-toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.6);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.3);
+      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), background 0.25s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lq-toggle input:checked ~ .lq-toggle-track .lq-toggle-thumb {
+      transform: translateX(20px);
+      background: #fff;
+    }
+    .lq-check-icon {
+      width: 10px;
+      height: 10px;
+      opacity: 0;
+      transform: scale(0.4) rotate(-20deg);
+      transition: opacity 0.2s 0.05s, transform 0.25s 0.05s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .lq-toggle input:checked ~ .lq-toggle-track .lq-check-icon {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+
+
+    /* ── Sort Button ── */
+    .lq-sort-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 11px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: inherit;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: background 0.15s, color 0.15s, transform 0.1s;
+      outline: none;
+    }
+    .lq-sort-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .lq-sort-btn:active { transform: scale(0.93); }
+    .lq-sort-btn svg { transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+    .lq-sort-btn.flipped svg { transform: scaleY(-1); }
+
+    /* ── Mini player swipe ── */
+    #mini-swipe-area {
+      touch-action: pan-y;
+      cursor: grab;
+    }
+    #mini-swipe-area.is-swiping { cursor: grabbing; }
+    .mini-swipe-out-left  { animation: miniSwipeLeft  0.28s cubic-bezier(0.4,0,0.2,1) forwards; }
+    .mini-swipe-out-right { animation: miniSwipeRight 0.28s cubic-bezier(0.4,0,0.2,1) forwards; }
+    .mini-swipe-in-left   { animation: miniSwipeInLeft  0.28s cubic-bezier(0.34,1.1,0.64,1) forwards; }
+    .mini-swipe-in-right  { animation: miniSwipeInRight 0.28s cubic-bezier(0.34,1.1,0.64,1) forwards; }
+    @keyframes miniSwipeLeft  { to { transform: translateX(-80px); opacity: 0; } }
+    @keyframes miniSwipeRight { to { transform: translateX(80px);  opacity: 0; } }
+    @keyframes miniSwipeInLeft  { from { transform: translateX(80px);  opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes miniSwipeInRight { from { transform: translateX(-80px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* ── Ensure path to background is clear */
+    .view,
+    .plsec,
+    .pll {
+      background: transparent !important;
+    }
+
+    /* ══ HOME VIEW ══════════════════════════════════════════════════ */
+    #vh {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: auto;
+    }
+
+    /* Header */
+    .hm-hd {
+      padding: calc(18px + var(--safe-t)) 18px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .hm-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(var(--a), .22);
+      border: 1.5px solid rgba(var(--a), .35);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform .3s var(--apple-spring);
+    }
+    .hm-avatar:active { transform: scale(.9); }
+    .hm-avatar svg { opacity: .7; }
+
+    .hm-brand {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      text-align: center;
+      position: relative;
+    }
+    .hm-brand .logo {
+      font-size: 30px;
+      line-height: 1;
+      letter-spacing: -0.9px;
+      white-space: nowrap;
+    }
+    .hm-brand .hm-pill { display: none; }
+
+    .hm-notif {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform .3s var(--apple-spring), background .2s;
+      flex-shrink: 0;
+    }
+    .hm-notif:active { transform: scale(.9); background: rgba(255,255,255,.14); }
+
+    /* Quick Grid */
+    .hm-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 0 12px 22px;
+    }
+
+    .hm-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      background: rgba(255,255,255,.09);
+      backdrop-filter: blur(var(--glass-blur)) saturate(1.6) brightness(1.02);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6) brightness(1.02);
+      border: 1px solid rgba(255,255,255,.1);
+      box-shadow:
+        inset 1px 1px 0 rgba(255,255,255,.12),
+        0 2px 12px rgba(0,0,0,.2);
+      transition: transform .3s var(--apple-spring), background .2s;
+      animation: hm-card-in .45s var(--apple-ease) both;
+    }
+    .hm-card:nth-child(2)  { animation-delay: .04s; }
+    .hm-card:nth-child(3)  { animation-delay: .08s; }
+    .hm-card:nth-child(4)  { animation-delay: .12s; }
+    .hm-card:nth-child(5)  { animation-delay: .16s; }
+    .hm-card:nth-child(6)  { animation-delay: .20s; }
+    .hm-card:nth-child(7)  { animation-delay: .24s; }
+    .hm-card:nth-child(8)  { animation-delay: .28s; }
+
+    @keyframes hm-card-in {
+      from { opacity: 0; transform: translateY(10px) scale(.97); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .hm-card:active { transform: scale(.95); }
+    .hm-card:hover  { background: rgba(255,255,255,.14); }
+
+    .hm-card-art {
+      width: 56px;
+      height: 56px;
+      flex-shrink: 0;
+      background: rgba(var(--a), .22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      border-radius: 0;
+    }
+    .hm-card-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .hm-card-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      padding-right: 8px;
+      line-height: 1.3;
+    }
+
+    /* Section titles */
+    .hm-sec {
+      padding: 0 18px 14px;
+    }
+    .hm-sec-tit {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -.4px;
+      margin-bottom: 14px;
+      animation: hm-card-in .4s var(--apple-ease) .1s both;
+    }
+
+    /* New release banner */
+    .hm-new-release {
+      margin: 0 12px 22px;
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      background: rgba(255,255,255,.07);
+      backdrop-filter: blur(var(--glass-blur)) saturate(1.65);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.65);
+      border: 1px solid rgba(255,255,255,.1);
+      box-shadow:
+        inset 1px 1px 0 rgba(255,255,255,.12),
+        0 8px 32px rgba(0,0,0,.3);
+      display: flex;
+      gap: 0;
+      animation: hm-card-in .5s var(--apple-ease) .15s both;
+      transition: transform .3s var(--apple-spring);
+    }
+    .hm-new-release:active { transform: scale(.98); }
+
+    .hm-nr-art {
+      width: 130px;
+      height: 130px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, rgba(var(--a),.45) 0%, rgba(0,0,0,.7) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 50px;
+      position: relative;
+    }
+    .hm-nr-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      inset: 0;
+    }
+
+    .hm-nr-info {
+      flex: 1;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-width: 0;
+    }
+    .hm-nr-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255,255,255,.45);
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .hm-nr-artist {
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .hm-nr-type {
+      font-size: 11px;
+      color: rgba(255,255,255,.38);
+      margin-bottom: 2px;
+    }
+    .hm-nr-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .hm-nr-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,.42);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+    .hm-nr-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+    }
+    .hm-nr-add {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,.28);
+      background: none;
+      color: rgba(255,255,255,.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform .3s var(--apple-spring), border-color .2s;
+    }
+    .hm-nr-add:active { transform: scale(.88); border-color: rgba(255,255,255,.6); }
+
+    .hm-nr-play {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.9);
+      border: none;
+      color: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 12px rgba(0,0,0,.3), 0 0 20px rgba(var(--a),.25);
+      transition: transform .3s var(--apple-spring), box-shadow .3s;
+    }
+    .hm-nr-play:active { transform: scale(.88); filter: brightness(.88); }
+
+    /* Stations horizontal scroll */
+    .hm-stations-scroll {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 0 18px 8px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .hm-stations-scroll::-webkit-scrollbar { display: none; }
+
+    .hm-station-card {
+      flex-shrink: 0;
+      width: 150px;
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      background: rgba(255,255,255,.08);
+      backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+      border: 1px solid rgba(255,255,255,.1);
+      box-shadow: inset 1px 1px 0 rgba(255,255,255,.1), 0 4px 16px rgba(0,0,0,.25);
+      transition: transform .3s var(--apple-spring);
+      animation: hm-card-in .5s var(--apple-ease) both;
+    }
+    .hm-station-card:nth-child(2) { animation-delay: .06s; }
+    .hm-station-card:nth-child(3) { animation-delay: .12s; }
+    .hm-station-card:active { transform: scale(.95); }
+
+    .hm-station-art {
+      width: 100%;
+      aspect-ratio: 1;
+      position: relative;
+      background: linear-gradient(135deg, rgba(var(--a),.35) 0%, rgba(0,0,0,.6) 100%);
+      overflow: hidden;
+    }
+
+    .hm-station-art-collage {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      width: 100%;
+      height: 100%;
+    }
+    .hm-station-art-collage > div {
+      background: rgba(var(--a), .22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      overflow: hidden;
+    }
+    .hm-station-art-collage > div img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .hm-station-radio-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .8px;
+      color: rgba(255,255,255,.9);
+    }
+    .hm-station-sp-icon {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,.7);
+    }
+
+    .hm-station-footer {
+      padding: 10px 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .hm-station-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+
+    /* Greeting header */
+    .hm-greeting {
+      padding: 0 18px 20px;
+      animation: hm-card-in .4s var(--apple-ease) both;
+    }
+    .hm-greeting-text {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -.6px;
+      background: linear-gradient(135deg, #fff 0%, rgba(var(--a),1) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Top mix card (large horizontal) */
+    .hm-mix-section {
+      padding: 0 18px 22px;
+    }
+    .hm-mix-tit {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -.4px;
+      margin-bottom: 14px;
+      animation: hm-card-in .4s var(--apple-ease) .05s both;
+    }
+    .hm-mix-scroll {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      margin: 0 -18px;
+      padding: 0 18px 8px;
+    }
+    .hm-mix-scroll::-webkit-scrollbar { display: none; }
+
+    .hm-mix-card {
+      flex-shrink: 0;
+      width: 155px;
+      cursor: pointer;
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(255,255,255,.07);
+      backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+      border: 1px solid rgba(255,255,255,.09);
+      box-shadow: 0 4px 16px rgba(0,0,0,.22), inset 1px 1px 0 rgba(255,255,255,.08);
+      transition: transform .3s var(--apple-spring);
+      animation: hm-card-in .5s var(--apple-ease) both;
+    }
+    .hm-mix-card:nth-child(2) { animation-delay: .06s; }
+    .hm-mix-card:nth-child(3) { animation-delay: .12s; }
+    .hm-mix-card:nth-child(4) { animation-delay: .18s; }
+    .hm-mix-card:active { transform: scale(.95); }
+
+    .hm-mix-art {
+      width: 100%;
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, rgba(var(--a),.4), rgba(0,0,0,.65));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 46px;
+      position: relative;
+    }
+    .hm-mix-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      inset: 0;
+    }
+    .hm-mix-foot {
+      padding: 10px;
+    }
+    .hm-mix-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .hm-mix-sub {
+      font-size: 11px;
+      color: rgba(255,255,255,.4);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* CRITICAL: Filter Target (Restored to working logic) */
+    .liquify-glass-target {
+      backdrop-filter: blur(2px) saturate(1.6) !important;
+      -webkit-backdrop-filter: blur(2px) saturate(1.6) !important;
+      backdrop-filter: var(--glass-filter) blur(var(--glass-blur, 1.5px)) saturate(1.6) !important;
+      -webkit-backdrop-filter: var(--glass-filter) blur(var(--glass-blur, 1.5px)) saturate(1.6) !important;
+      box-shadow: var(--glass-shadow) !important;
+    }
+
+    /* ── Login Modal ── */
+    .lq-login-modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px) saturate(1.5);
+      -webkit-backdrop-filter: blur(10px) saturate(1.5);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .lq-login-modal.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .lq-login-content {
+      background: rgba(20, 20, 20, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 30px;
+      width: 90%;
+      max-width: 320px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+      position: relative;
+      transform: translateY(20px) scale(0.95);
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .lq-login-modal.show .lq-login-content {
+      transform: translateY(0) scale(1);
+    }
+    .lq-login-close {
+      position: absolute;
+      top: 16px; right: 16px;
+      cursor: pointer;
+      color: rgba(255,255,255,0.5);
+      transition: color 0.2s;
+    }
+    .lq-login-close:hover {
+      color: #fff;
+    }
+    .lq-login-content h2 {
+      margin: 0 0 10px 0;
+      font-size: 24px;
+      font-weight: 800;
+      color: #fff;
+      text-align: center;
+    }
+    .lq-input {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: #fff;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .lq-input::placeholder {
+      color: rgba(255,255,255,0.4);
+    }
+    .lq-input:focus {
+      border-color: rgba(255,255,255,0.3);
+      background: rgba(0,0,0,0.6);
+    }
+    .lq-login-btn {
+      margin-top: 10px;
+      padding: 14px;
+      justify-content: center;
+      font-size: 15px;
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.2);
+    }
+    .lq-login-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    .lq-auth-toggle {
+      text-align: center;
+      font-size: 13px;
+      color: rgba(255,255,255,0.6);
+      cursor: pointer;
+      margin-top: 5px;
+      transition: color 0.2s;
+    }
+    .lq-auth-toggle:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+    .lq-auth-error {
+      color: #ff6e6e;
+      font-size: 13px;
+      text-align: center;
+      min-height: 18px;
+    }
+
+    /* ── PROFILE VIEW ── */
+    #vprof {
+      position: relative;
+      z-index: 200;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      background: #121212;
+      background: linear-gradient(to bottom, #4f2f4f 0%, #121212 40%);
+    }
+    .prof-hd {
+      padding: calc(20px + var(--safe-t, 0px)) 20px 10px;
+    }
+    .prof-back {
+      background: none; border: none; color: #fff; cursor: pointer; padding: 5px;
+      margin-left: -5px;
+    }
+    .prof-main {
+      padding: 0 20px 20px;
+    }
+    .prof-info {
+      display: flex; align-items: center; gap: 16px; margin-bottom: 20px;
+    }
+    .prof-avatar {
+      width: 100px; height: 100px; border-radius: 50%; overflow: hidden;
+      background: #fff; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.1);
+    }
+    .prof-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .prof-text h1 { margin: 0 0 4px; font-size: 24px; font-weight: 800; color: #fff; }
+    .prof-text p { margin: 0; font-size: 13px; color: rgba(255,255,255,0.6); }
+    
+    .prof-actions { display: flex; align-items: center; gap: 12px; }
+    .prof-btn-edit {
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
+      color: #fff; border-radius: 20px; padding: 6px 16px; font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .prof-btn-edit:active { transform: scale(0.95); background: rgba(255,255,255,0.2); }
+    .prof-btn-icon {
+      background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; padding: 5px;
+      transition: color 0.2s;
+    }
+    .prof-btn-icon:hover { color: #fff; }
+    .prof-playlists { padding: 0 20px 30px; }
+    .prof-playlists h2 { margin: 0 0 16px; font-size: 20px; font-weight: 800; color: #fff; }
+    
+    .prof-pl-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; cursor: pointer; }
+    .prof-pl-art { width: 60px; height: 60px; border-radius: 4px; overflow: hidden; background: #333; flex-shrink: 0; }
+    .prof-pl-art img { width: 100%; height: 100%; object-fit: cover; }
+    .prof-pl-info { display: flex; flex-direction: column; gap: 4px; }
+    .prof-pl-title { font-size: 15px; font-weight: 600; color: #fff; }
+    .prof-pl-sub { font-size: 13px; color: rgba(255,255,255,0.5); }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+  <!-- Liquify SVG glass filters will be generated dynamically by liquifyEngine -->
+
+  <div id="bg">
+    <div id="bga"></div>
+    <div id="bgw"></div>
+    <video id="bg-video" loop muted playsinline style="display:none; position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1;"></video>
+    <div id="bgm"></div>
+  </div>
+
+  <div id="app">
+
+    <!-- HOME -->
+    <div id="vh" class="view active">
+      <!-- Header -->
+      <div class="hm-hd">
+        <div class="hm-avatar" onclick="handleAvatarClick()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <div class="hm-brand">
+          <div class="logo" aria-hidden="true">Liquify</div>
+          <button class="hm-pill on" id="hpill-all" onclick="hmSetPill('all')">Все</button>
+          <button class="hm-pill" id="hpill-music" onclick="hmSetPill('music')">Музыка</button>
+          <button class="hm-pill" id="hpill-pod" onclick="hmSetPill('pod')">Подкасты</button>
+        </div>
+        <div class="hm-notif">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </div>
+      </div>
+
+      <!-- Greeting -->
+      <div class="hm-greeting">
+        <div class="hm-greeting-text" id="hm-greeting-text">Добрый вечер</div>
+      </div>
+
+      <!-- Quick grid -->
+      <div class="hm-grid">
+        <div class="hm-card liquify-card" onclick="openHomePlaylist('favorites')">
+          <div class="hm-card-art" style="background:linear-gradient(135deg,rgba(167,139,250,.6),rgba(80,40,140,.8))">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.8" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </div>
+          <span class="hm-card-name">Любимые треки</span>
+        </div>
+        <div class="hm-card liquify-card" onclick="openHomePlaylist('recent')">
+          <div class="hm-card-art" style="background:linear-gradient(135deg,rgba(245,158,11,.5),rgba(120,53,15,.8))">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.8" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3" fill="rgba(255,255,255,.7)"/></svg>
+          </div>
+          <span class="hm-card-name">Недавно играло</span>
+        </div>
+        <div class="hm-card liquify-card" onclick="sv('l')">
+          <div class="hm-card-art" style="background:linear-gradient(135deg,rgba(239,68,68,.5),rgba(100,10,10,.8))">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.8" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          </div>
+          <span class="hm-card-name">Все треки</span>
+        </div>
+        <div class="hm-card liquify-card" onclick="sv('l')">
+          <div class="hm-card-art" style="background:linear-gradient(135deg,rgba(16,185,129,.5),rgba(6,78,59,.8))">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5" fill="rgba(255,255,255,.7)" stroke="none"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <span class="hm-card-name">Моя медиатека</span>
+        </div>
+        <div class="hm-card liquify-card" onclick="sv('s')">
+          <div class="hm-card-art" style="background:linear-gradient(135deg,rgba(59,130,246,.5),rgba(30,58,138,.8))">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <span class="hm-card-name">Поиск треков</span>
+        </div>
+        <div class="hm-card liquify-card" onclick="sv('l')">
+          <div class="hm-card-art" style="background:linear-gradient(135deg,rgba(236,72,153,.5),rgba(100,10,70,.8))">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.8" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </div>
+          <span class="hm-card-name">Плейлисты</span>
+        </div>
+      </div>
+
+      <!-- New release (stub) -->
+      <div class="hm-sec">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;animation:hm-card-in .4s var(--apple-ease) .1s both">
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(var(--a),.4),rgba(0,0,0,.5));overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px">🎵</div>
+          <div>
+            <div style="font-size:12px;color:rgba(255,255,255,.45);font-weight:500">Новый релиз исполнителя</div>
+            <div style="font-size:15px;font-weight:800;letter-spacing:-.2px">Недавно добавлено</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Featured release card -->
+      <div class="hm-new-release liquify-card" onclick="sv('p')">
+        <div class="hm-nr-art">
+          <span style="font-size:52px;position:relative;z-index:1">🎵</span>
+        </div>
+        <div class="hm-nr-info">
+          <div>
+            <div class="hm-nr-type">Сингл · · ·</div>
+            <div class="hm-nr-title" id="hm-nr-title">—</div>
+            <div class="hm-nr-sub" id="hm-nr-artist">Выберите трек</div>
+          </div>
+          <div class="hm-nr-actions">
+            <button class="hm-nr-add" onclick="event.stopPropagation()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <button class="hm-nr-play" onclick="event.stopPropagation();togglePlay()">
+              <svg width="16" height="16" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommended stations -->
+      <div class="hm-sec" style="padding-bottom:0">
+        <div class="hm-sec-tit">Рекомендуемые</div>
+      </div>
+      <div class="hm-stations-scroll">
+        <!-- Station 1 -->
+        <div class="hm-station-card liquify-card" onclick="sv('s')">
+          <div class="hm-station-art">
+            <div class="hm-station-art-collage">
+              <div style="background:linear-gradient(135deg,rgba(167,139,250,.6),rgba(60,20,120,.9))">🎸</div>
+              <div style="background:linear-gradient(135deg,rgba(245,158,11,.5),rgba(120,53,15,.9))">🎹</div>
+              <div style="background:linear-gradient(135deg,rgba(59,130,246,.5),rgba(30,58,138,.9))">🥁</div>
+              <div style="background:linear-gradient(135deg,rgba(16,185,129,.5),rgba(6,78,59,.9))">🎷</div>
+            </div>
+            <div class="hm-station-radio-badge">РАДИО</div>
+            <div class="hm-station-sp-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,.7)"><circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/><polygon points="10 8 16 12 10 16 10 8" fill="rgba(255,255,255,.7)"/></svg>
+            </div>
+          </div>
+          <div class="hm-station-footer">
+            <span class="hm-station-name">Микс дня</span>
+          </div>
+        </div>
+        <!-- Station 2 -->
+        <div class="hm-station-card liquify-card" onclick="sv('s')">
+          <div class="hm-station-art">
+            <div class="hm-station-art-collage">
+              <div style="background:linear-gradient(135deg,rgba(236,72,153,.6),rgba(100,10,70,.9))">🎤</div>
+              <div style="background:linear-gradient(135deg,rgba(239,68,68,.5),rgba(100,10,10,.9))">🎻</div>
+              <div style="background:linear-gradient(135deg,rgba(167,139,250,.4),rgba(60,20,120,.9))">🎺</div>
+              <div style="background:linear-gradient(135deg,rgba(245,158,11,.5),rgba(120,53,15,.9))">🪗</div>
+            </div>
+            <div class="hm-station-radio-badge">РАДИО</div>
+            <div class="hm-station-sp-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,.7)"><circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/><polygon points="10 8 16 12 10 16 10 8" fill="rgba(255,255,255,.7)"/></svg>
+            </div>
+          </div>
+          <div class="hm-station-footer">
+            <span class="hm-station-name">Похожее</span>
+          </div>
+        </div>
+        <!-- Station 3 -->
+        <div class="hm-station-card liquify-card" onclick="sv('s')">
+          <div class="hm-station-art">
+            <div class="hm-station-art-collage">
+              <div style="background:linear-gradient(135deg,rgba(16,185,129,.6),rgba(6,78,59,.9))">🎵</div>
+              <div style="background:linear-gradient(135deg,rgba(59,130,246,.5),rgba(30,58,138,.9))">🎶</div>
+              <div style="background:linear-gradient(135deg,rgba(167,139,250,.5),rgba(60,20,120,.9))">🔈</div>
+              <div style="background:linear-gradient(135deg,rgba(236,72,153,.4),rgba(100,10,70,.9))">🎼</div>
+            </div>
+            <div class="hm-station-radio-badge">РАДИО</div>
+            <div class="hm-station-sp-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,.7)"><circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/><polygon points="10 8 16 12 10 16 10 8" fill="rgba(255,255,255,.7)"/></svg>
+            </div>
+          </div>
+          <div class="hm-station-footer">
+            <span class="hm-station-name">Энергичное</span>
+          </div>
+        </div>
+        <!-- Station 4 (partial) -->
+        <div class="hm-station-card liquify-card" onclick="sv('s')" style="opacity:.7">
+          <div class="hm-station-art">
+            <div class="hm-station-art-collage">
+              <div style="background:linear-gradient(135deg,rgba(245,158,11,.6),rgba(120,53,15,.9))">🌙</div>
+              <div style="background:linear-gradient(135deg,rgba(239,68,68,.4),rgba(100,10,10,.9))">✨</div>
+              <div style="background:linear-gradient(135deg,rgba(167,139,250,.5),rgba(60,20,120,.9))">💫</div>
+              <div style="background:linear-gradient(135deg,rgba(16,185,129,.4),rgba(6,78,59,.9))">🌟</div>
+            </div>
+            <div class="hm-station-radio-badge">РАДИО</div>
+            <div class="hm-station-sp-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,.7)"><circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/><polygon points="10 8 16 12 10 16 10 8" fill="rgba(255,255,255,.7)"/></svg>
+            </div>
+          </div>
+          <div class="hm-station-footer">
+            <span class="hm-station-name">Спокойное</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mixes section -->
+      <div class="hm-mix-section" style="margin-top:22px">
+        <div class="hm-mix-tit">Для вас</div>
+        <div class="hm-mix-scroll">
+          <div class="hm-mix-card liquify-card" onclick="sv('l')">
+            <div class="hm-mix-art" style="background:linear-gradient(135deg,rgba(167,139,250,.7),rgba(40,10,100,.9))">🎧</div>
+            <div class="hm-mix-foot">
+              <div class="hm-mix-name">Микс дня 1</div>
+              <div class="hm-mix-sub">Основано на вашем вкусе</div>
+            </div>
+          </div>
+          <div class="hm-mix-card liquify-card" onclick="sv('l')">
+            <div class="hm-mix-art" style="background:linear-gradient(135deg,rgba(236,72,153,.6),rgba(100,10,70,.9))">🎸</div>
+            <div class="hm-mix-foot">
+              <div class="hm-mix-name">Открытия недели</div>
+              <div class="hm-mix-sub">Новая музыка</div>
+            </div>
+          </div>
+          <div class="hm-mix-card liquify-card" onclick="sv('l')">
+            <div class="hm-mix-art" style="background:linear-gradient(135deg,rgba(59,130,246,.6),rgba(30,58,138,.9))">🌊</div>
+            <div class="hm-mix-foot">
+              <div class="hm-mix-name">Ежедневный микс</div>
+              <div class="hm-mix-sub">Ваш плейлист</div>
+            </div>
+          </div>
+          <div class="hm-mix-card liquify-card" onclick="sv('l')">
+            <div class="hm-mix-art" style="background:linear-gradient(135deg,rgba(245,158,11,.6),rgba(120,53,15,.9))">🔥</div>
+            <div class="hm-mix-foot">
+              <div class="hm-mix-name">Недавние хиты</div>
+              <div class="hm-mix-sub">Популярное</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:24px"></div>
+    </div>
+
+    <!-- LIBRARY -->
+    <div id="vl" class="view">
+      <div class="lhd">
+        <div>
+          <div class="logo">Liquify</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button id="sortbtn" class="lq-sort-btn" onclick="cycleSortOrder()" title="Сортировка">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="6" x2="20" y2="6"/>
+              <line x1="4" y1="12" x2="14" y2="12"/>
+              <line x1="4" y1="18" x2="9" y2="18"/>
+            </svg>
+            <span id="sort-label">A–Z</span>
+          </button>
+          <div class="addbtn" id="addbtn" title="Нажмите — добавить файлы / Зажмите — SoundCloud из буфера">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <input type="file" id="fi" accept="audio/*,.csv" multiple>
+
+      <label id="dz" for="fi">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+          <path d="M9 18V5l12-2v13" />
+          <circle cx="6" cy="18" r="3" />
+          <circle cx="18" cy="16" r="3" />
+        </svg>
+        <div class="dzm">Добавьте музыку</div>
+        <div class="dzs">Нажмите или перетащите аудиофайлы</div>
+      </label>
+
+
+      <div id="plsec" class="plsec">
+        <div class="plh">
+          <span>Плейлисты</span>
+          <button class="pladd" onclick="openPlaylistCreate()">+ Плейлист</button>
+        </div>
+        <div id="pll" class="pll">
+
+        </div>
+      </div>
+      <div id="secrow" class="secrow" style="display:none!important;visibility:hidden;height:0;overflow:hidden">
+        <span class="badge" id="cbadge">0 треков</span>
+      </div>
+      <div id="tl"></div>
+    </div>
+
+    <!-- PLAYER -->
+    <div id="vp" class="view">
+      <div id="pcv">
+        <video id="pcv-video" muted loop playsinline webkit-playsinline preload="metadata"></video>
+      </div>
+      <div class="phd">
+        <button onclick="closePlayerSheet()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg></button>
+        <span class="plbl">Сейчас играет</span>
+        <button onclick="openQueue()" title="Три точки" style="pointer-events:none;opacity:0.4"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="5" r="1.2" fill="currentColor" />
+            <circle cx="12" cy="12" r="1.2" fill="currentColor" />
+            <circle cx="12" cy="19" r="1.2" fill="currentColor" />
+          </svg></button>
+      </div>
+
+      <div id="aw">
+        <div id="ac">
+          <div id="ai"><span id="aem">🎵</span></div>
+        </div>
+      </div>
+
+      <div class="pinf">
+        <div class="pinf-row">
+          <div id="aw-canvas" style="display:none">
+            <div id="ac-canvas">
+              <div id="ai-canvas"><span id="aem-canvas">🎵</span></div>
+            </div>
+          </div>
+          <div class="ptx canvas-meta-glass" data-lq-edge-scale="3" data-lq-refract-scale="2.1" data-lq-blur="3.15px">
+          <div class="pn" id="pn">—</div>
+          <div class="pa" id="part">Выберите трек</div>
+          </div>
+        </div>
+        <button class="lkbtn" id="lkbtn" onclick="toggleLike()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path
+              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="ws">
+        <canvas id="wv" height="64"></canvas>
+        <div class="tr"><span id="tc">0:00</span><span id="tt">0:00</span></div>
+      </div>
+
+      <div class="cs">
+        <div class="ex">
+          <button class="xb" id="shb" onclick="toggleShuffle()" title="Перемешать">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <polyline points="16 3 21 3 21 8" />
+              <line x1="4" y1="20" x2="21" y2="3" />
+              <polyline points="21 16 21 21 16 21" />
+              <line x1="15" y1="15" x2="21" y2="21" />
+            </svg>
+          </button>
+          <button class="xb" id="reb" onclick="toggleRepeat()" title="Повтор">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <polyline points="17 1 21 5 17 9" />
+              <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+              <polyline points="7 23 3 19 7 15" />
+              <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+            </svg>
+          </button>
+          <button class="xb" title="Текст" onclick="openFullLyrics()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
+          <button class="xb" title="Очередь" onclick="openQueue()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="8" y1="6" x2="21" y2="6" />
+              <line x1="8" y1="12" x2="21" y2="12" />
+              <line x1="8" y1="18" x2="21" y2="18" />
+              <line x1="3" y1="6" x2="3.01" y2="6" />
+              <line x1="3" y1="12" x2="3.01" y2="12" />
+              <line x1="3" y1="18" x2="3.01" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="mc">
+          <button class="cb" onclick="playPrev()"><svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="19 20 9 12 19 4 19 20" />
+              <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg></button>
+          <button id="pb" onclick="togglePlay()"><svg id="pbi" width="32" height="32" viewBox="0 0 24 24">
+              <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />
+            </svg></button>
+          <button class="cb" onclick="playNext()"><svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 4 15 12 5 20 5 4" />
+              <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg></button>
+        </div>
+      </div>
+
+      <div id="lx-sec" style="display:none" onclick="openFullLyrics()">
+        <div id="lx-sec-h">Lyrics</div>
+        <div id="lx-sec-b"></div>
+      </div>
+
+      <div class="vs">
+        <input type="range" id="vol" min="0" max="100" value="80">
+        <span class="vi"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+          </svg></span>
+      </div>
+    </div>
+
+    <!-- SEARCH -->
+    <div id="vs" class="view">
+      <div class="shd">
+        <div class="stit">Поиск</div>
+        <div class="sbox">
+          <button id="provider-toggle" class="provider-btn lc" onclick="toggleSearchProvider()" title="Источник поиска">
+            <!-- Local library icon -->
+            <svg class="icon-lc" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            <!-- Spotify icon -->
+            <svg class="icon-sp" style="display:none;" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.492 17.293c-.218.358-.68.469-1.038.25-2.855-1.745-6.449-2.14-10.682-1.172-.41.094-.816-.164-.91-.573-.093-.41.164-.816.573-.91 4.636-1.06 8.59-.607 11.807 1.353.358.219.469.68.25 1.038zm1.467-3.266c-.274.446-.86.586-1.306.312-3.268-2.008-8.25-2.59-12.115-1.417-.502.152-1.035-.133-1.187-.635-.152-.501.134-1.034.635-1.186 4.417-1.34 9.907-.68 13.66 1.625.446.274.586.86.312 1.306zm.133-3.418c-3.92-2.327-10.375-2.541-14.137-1.399-.601.183-1.238-.168-1.42-.769-.182-.601.168-1.237.769-1.42 4.316-1.31 11.438-1.06 15.968 1.628.54.322.715 1.02.393 1.56-.32.54-1.02.716-1.56.394l-.013.001z"/>
+            </svg>
+            <!-- SoundCloud icon -->
+            <svg class="icon-sc" style="display:none;" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M11.56 8.87V17h-1.12V10.1l-2 .67L8 9.77l3.16-1.2h.4zm6.94.05a3.5 3.5 0 0 1-.72 1.14c-.31.33-.66.6-1.06.82a4.31 4.31 0 0 1-1.33.47V9.96c.3-.07.59-.2.85-.38.26-.18.46-.4.62-.67h-1.47V7.8h3.6v1.12h-.49z" />
+            </svg>
+          </button>
+          <input type="text" id="si" placeholder="Трек, альбом, артист...">
+          <button id="sclear" style="display:none;" onclick="clearSearch()">✕</button>
+        </div>
+      </div>
+      <div id="shist" class="search-history" style="display:none;">
+        <div class="shist-tit">История поиска</div>
+        <div class="shist-list" id="shist-list"></div>
+      </div>
+      <div id="sr"></div>
+      <div id="se" class="emp">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <h3>Начните поиск</h3>
+        <p>Введите название трека или имя исполнителя</p>
+      </div>
+    </div>
+
+    <div id="vpl" class="view">
+      <div class="vpl-topbar" style="padding: 16px 20px; display: flex; justify-content: space-between;">
+        <button onclick="closePlaylistView()" style="background:none;border:none;color:inherit;font-size:16px;">← Назад</button>
+        <button class="vpl-more" style="background:none;border:none;color:inherit;font-size:16px;">···</button>
+      </div>
+      <div class="vpl-artwork" id="vpl-artwork" style="width: 220px; height: 220px; margin: 24px auto 16px; border-radius: 16px; overflow: hidden; box-shadow: 0 16px 40px rgba(0,0,0,0.4);">
+      </div>
+      <div class="vpl-meta" style="text-align: center; padding: 0 24px 16px;">
+        <div class="vpl-title" id="vpl-title" style="font-size: 22px; font-weight: 700; margin-bottom: 6px;"></div>
+        <div class="vpl-author" id="vpl-author" style="font-size: 14px; opacity: 0.7; margin-bottom: 4px; display:flex; align-items:center; justify-content:center; gap:6px;"></div>
+        <div class="vpl-stats" id="vpl-stats" style="font-size: 13px; opacity: 0.45;"></div>
+      </div>
+      <div class="vpl-actions" style="display: flex; align-items: center; padding: 8px 20px 16px; gap: 16px;">
+        <!-- Скачать -->
+        <button class="vpl-act" id="vpl-act-dl" title="Скачать" style="background:none; border:none; color:rgba(255,255,255,0.55); padding:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:color .2s;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </button>
+        <!-- Плюс (добавить в медиатеку / уже добавлено) -->
+        <button class="vpl-act" id="vpl-act-like" title="В медиатеке" style="background:none; border:none; color:rgba(167,139,250,1); padding:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:color .2s;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+        <!-- Три точки в стиле приложения -->
+        <button class="vpl-act" id="vpl-act-more" title="Ещё" style="background:none; border:none; color:rgba(255,255,255,0.55); padding:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:color .2s;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="5" r="1.2" fill="currentColor" stroke="none"/>
+            <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/>
+            <circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/>
+          </svg>
+        </button>
+        <div style="flex:1"></div>
+        <button class="vpl-shuf" id="vpl-shuf" style="background: rgba(255,255,255,0.1); border: none; color: inherit; border-radius: 20px; padding: 10px 18px; font-size: 14px; font-weight: 600; display:flex; align-items:center; gap:6px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+          Перемешать
+        </button>
+        <button class="vpl-play" id="vpl-play" style="width: 52px; height: 52px; border-radius: 50%; background: var(--ah, #a78bfa); border: none; color: #000; font-size: 20px; display: flex; align-items:center; justify-content:center;">
+          <svg width="20" height="20" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/></svg>
+        </button>
+      </div>
+      <div class="vpl-tracks" id="vpl-tracks" style="padding: 0 12px 120px; display:flex; flex-direction:column; gap:5px;">
+      </div>
+    </div>
+
+    <div id="vartist" class="view">
+      <div class="artist-topbar" style="position:absolute; top:16px; left:20px; z-index:2;">
+        <button onclick="closeArtistPage()" style="background:rgba(0,0,0,0.5); border-radius:20px; padding:8px 16px; border:none; color:#fff; font-size:14px; backdrop-filter:blur(8px);">← Назад</button>
+      </div>
+      <div class="artist-hero" id="artist-hero" style="height: 260px; position: relative; background-size: cover; background-position: center;">
+        <div class="artist-avatar" id="artist-avatar" style="display:none;"></div>
+        <div class="artist-hero-overlay" style="position: absolute; inset:0; background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.85));"></div>
+        <div class="artist-hero-content" style="position: absolute; bottom: 20px; left: 20px; z-index: 1;">
+          <div class="artist-name" id="artist-name" style="font-size: 26px; font-weight: 800;"></div>
+          <div class="artist-followers" id="artist-followers" style="font-size: 14px; opacity: 0.7; margin-top: 4px;"></div>
+        </div>
+      </div>
+      <div class="artist-actions" style="display: flex; gap: 12px; padding: 16px 20px;">
+        <button class="artist-follow-btn" id="artist-follow-btn" style="flex:1; background: var(--ah, #a78bfa); border:none; color:#000; border-radius: 20px; padding: 12px; font-size: 14px; font-weight: 700;">Подписаться</button>
+        <button class="artist-sc-btn" id="artist-sc-btn" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; color: inherit; padding: 12px 20px; font-size: 14px;">Открыть в SC</button>
+      </div>
+      <div class="artist-section" style="padding: 8px 0;">
+        <div class="artist-section-title" style="font-size: 17px; font-weight: 700; padding: 8px 20px;">Популярное</div>
+        <div id="artist-tracks"></div>
+      </div>
+      <div class="artist-section" style="padding: 8px 0; margin-bottom: 120px;">
+        <div class="artist-section-title" style="font-size: 17px; font-weight: 700; padding: 8px 20px;">Альбомы и плейлисты</div>
+        <div id="artist-playlists" class="artist-playlists-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 16px;"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="vsett" class="view">
+      <div class="vsett">
+        <div class="sett-tit">Настройки</div>
+
+        <div class="sett-sec">
+          <div class="sett-sec-tit">Сервисы</div>
+          <div class="sett-card glass-panel sett-card--spotify">
+            <div class="sp-brand-ico" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.492 17.293c-.218.358-.68.469-1.038.25-2.855-1.745-6.449-2.14-10.682-1.172-.41.094-.816-.164-.91-.573-.093-.41.164-.816.573-.91 4.636-1.06 8.59-.607 11.807 1.353.358.219.469.68.25 1.038zm1.467-3.266c-.274.446-.86.586-1.306.312-3.268-2.008-8.25-2.59-12.115-1.417-.502.152-1.035-.133-1.187-.635-.152-.501.134-1.034.635-1.186 4.417-1.34 9.907-.68 13.66 1.625.446.274.586.86.312 1.306zm.133-3.418c-3.92-2.327-10.375-2.541-14.137-1.399-.601.183-1.238-.168-1.42-.769-.182-.601.168-1.237.769-1.42 4.316-1.31 11.438-1.06 15.968 1.628.54.322.715 1.02.393 1.56-.32.54-1.02.716-1.56.394l-.013.001z" />
+              </svg>
+            </div>
+            <div class="sett-info">
+              <div class="sett-name">Spotify</div>
+              <div class="sett-desc" id="sp-status">Не подключено</div>
+            </div>
+            <button type="button" class="sp-btn sp-btn--primary" id="sp-main-btn"
+              onclick="loginSpotify()">Подключить</button>
+            <button type="button" class="sp-btn sp-btn--secondary" onclick="diagnosticSpotify()">🔧 Диагностика
+              Spotify</button>
+          </div>
+          <!-- Ручной ввод sp_dc куки -->
+          <div class="sett-card glass-panel sett-card--spotify" style="margin-top:10px">
+            <div class="sett-info">
+              <div class="sett-name">Ручной ввод токена</div>
+              <div class="sett-desc">Вставьте значение куки sp_dc</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-direction:column;width:100%;margin-top:8px">
+              <input type="text" id="sp-dc-input" placeholder="Вставьте sp_dc куку здесь..."
+                style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);
+                background:rgba(255,255,255,0.08);color:#fff;font-size:13px;font-family:monospace;">
+              <div style="display:flex;gap:8px">
+                <button class="lq-btn lq-btn--pick" onclick="saveSpDcCookie()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  Сохранить
+                </button>
+                <button class="lq-btn lq-btn--reset" onclick="clearSpDcCookie()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <polyline points="1 4 1 10 7 10"></polyline>
+                    <path d="M3.51 15a9 9 0 1 0 .49-4.36"></path>
+                  </svg>
+                  Очистить
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sett-sec">
+          <div class="sett-sec-tit">Приложение</div>
+          <div class="sett-card glass-panel" style="margin-bottom:10px">
+            <div class="sett-info">
+              <div class="sett-name">Обои</div>
+              <div class="sett-desc">Установить фоновое изображение или видео</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="lq-btn lq-btn--pick" onclick="document.getElementById('wallpicker-img').click()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/><polyline points="21 15 16 10 5 21"/></svg>
+                Фото
+              </button>
+              <button class="lq-btn lq-btn--pick" onclick="document.getElementById('wallpicker-video').click()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Видео
+              </button>
+              <button id="wall-reset" class="lq-btn lq-btn--reset" style="display:none" onclick="resetWallpaper()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.36"/></svg>
+                Сброс
+              </button>
+            </div>
+            <input type="file" id="wallpicker-img" accept="image/*" style="display:none"
+              onchange="handleWallpaperSelection(this, 'image')">
+            <input type="file" id="wallpicker-video" accept="video/*" style="display:none"
+              onchange="handleWallpaperSelection(this, 'video')">
+          </div>
+          <div class="sett-card glass-panel" style="margin-bottom:10px">
+            <div class="sett-info">
+              <div class="sett-name">Размытие фона</div>
+              <div class="sett-desc" id="bg-blur-val">70px</div>
+            </div>
+            <div class="lq-slider-wrap">
+              <input type="range" id="bg-blur-range" class="lq-slider" min="0" max="150" value="70" step="5"
+                oninput="updateBgBlur(this.value)">
+            </div>
+          </div>
+          <div class="sett-card glass-panel" style="margin-bottom:10px">
+            <div class="sett-info">
+              <div class="sett-name">Анимация фона</div>
+              <div class="sett-desc">Плавная анимация фонового градиента</div>
+            </div>
+            <label class="lq-toggle">
+              <input type="checkbox" id="bg-anim-toggle" onchange="toggleBgAnimation()">
+              <span class="lq-toggle-track">
+                <span class="lq-toggle-thumb">
+                  <svg class="lq-check-icon" viewBox="0 0 12 10" fill="none">
+                    <polyline points="1.5,5.5 4.5,8.5 10.5,1.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+              </span>
+            </label>
+          </div>
+          <div class="sett-card glass-panel" style="margin-bottom:10px">
+            <div class="sett-info">
+              <div class="sett-name">Показывать FPS</div>
+              <div class="sett-desc">Оверлей с частотой кадров интерфейса</div>
+            </div>
+            <label class="lq-toggle">
+              <input type="checkbox" id="ui-fps-toggle" onchange="setUiFpsEnabled(this.checked)">
+              <span class="lq-toggle-track">
+                <span class="lq-toggle-thumb">
+                  <svg class="lq-check-icon" viewBox="0 0 12 10" fill="none">
+                    <polyline points="1.5,5.5 4.5,8.5 10.5,1.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+              </span>
+            </label>
+          </div>
+          <div class="sett-card glass-panel" style="margin-bottom:10px">
+            <div class="sett-info">
+              <div class="sett-name">Кэшировать обложки</div>
+              <div class="sett-desc">Сохранять изображения для быстрой загрузки</div>
+            </div>
+            <label class="lq-toggle">
+              <input type="checkbox" checked>
+              <span class="lq-toggle-track">
+                <span class="lq-toggle-thumb">
+                  <svg class="lq-check-icon" viewBox="0 0 12 10" fill="none">
+                    <polyline points="1.5,5.5 4.5,8.5 10.5,1.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+              </span>
+            </label>
+          </div>
+          <div class="sett-card glass-panel" style="margin-bottom:10px">
+            <div class="sett-info">
+              <div class="sett-name">Офлайн режим</div>
+              <div class="sett-desc">Показывать только скачанные и прослушанные треки</div>
+            </div>
+            <label class="lq-toggle">
+              <input type="checkbox" id="offline-toggle" onchange="toggleOfflineMode()">
+              <span class="lq-toggle-track">
+                <span class="lq-toggle-thumb">
+                  <svg class="lq-check-icon" viewBox="0 0 12 10" fill="none">
+                    <polyline points="1.5,5.5 4.5,8.5 10.5,1.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+              </span>
+            </label>
+          </div>
+          <div class="sett-card glass-panel" style="margin-bottom:10px">
+            <div class="sett-info">
+              <div class="sett-name">Canvas логи</div>
+              <div class="sett-desc">Показать живые логи canvas поверх интерфейса</div>
+            </div>
+            <button class="lq-btn lq-btn--reset" id="canvas-log-toggle-btn" onclick="toggleCanvasLogOverlay()">
+              Показать логи
+            </button>
+          </div>
+          <div class="sett-card glass-panel">
+            <div class="sett-info">
+              <div class="sett-name">Версия</div>
+              <div class="sett-desc">1.3.0-beta</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SPOTIFY MANAGER MODAL -->
+    <div id="m-sp" class="m-sp">
+      <div class="m-sp-h">
+        <div class="m-sp-tit">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.492 17.293c-.218.358-.68.469-1.038.25-2.855-1.745-6.449-2.14-10.682-1.172-.41.094-.816-.164-.91-.573-.093-.41.164-.816.573-.91 4.636-1.06 8.59-.607 11.807 1.353.358.219.469.68.25 1.038zm1.467-3.266c-.274.446-.86.586-1.306.312-3.268-2.008-8.25-2.59-12.115-1.417-.502.152-1.035-.133-1.187-.635-.152-.501.134-1.034.635-1.186 4.417-1.34 9.907-.68 13.66 1.625.446.274.586.86.312 1.306zm.133-3.418c-3.92-2.327-10.375-2.541-14.137-1.399-.601.183-1.238-.168-1.42-.769-.182-.601.168-1.237.769-1.42 4.316-1.31 11.438-1.06 15.968 1.628.54.322.715 1.02.393 1.56-.32.54-1.02.716-1.56.394l-.013.001z" />
+          </svg>
+          Менеджер Spotify
+        </div>
+        <div class="m-sp-close" onclick="closeSpotifyManager()">Закрыть</div>
+      </div>
+      <div class="m-sp-csv glass-panel">
+        <button type="button" class="m-sp-csv-btn" onclick="handleCsvManual()">Загрузить CSV файл</button>
+      </div>
+      <input type="file" id="sp-csv-file" style="display:none" accept=".csv" onchange="handleCsvFile(this)">
+      <div class="m-sp-body" id="m-sp-list">
+        <!-- List of playlists here -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Mini player -->
+  <div id="mini" onclick="sv('p')">
+    <div id="mini-swipe-area" style="display:flex;align-items:center;flex:1;min-width:0;overflow:hidden;position:relative;">
+      <div class="ma" id="mina"><span id="minem">🎵</span></div>
+      <div class="mi">
+        <div class="mt" id="mint">—</div>
+        <div class="mat" id="minar">Выберите трек</div>
+      </div>
+    </div>
+    <button class="mc2" id="mpb" onclick="event.stopPropagation();togglePlay()">
+      <svg id="mpi" width="26" height="26" viewBox="0 0 24 24">
+        <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />
+      </svg>
+    </button>
+    <button class="mc2" onclick="event.stopPropagation();playNext()" style="color:rgba(255,255,255,.45)">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+        <polygon points="5 4 15 12 5 20 5 4" />
+        <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2" fill="none"
+          stroke-linecap="round" />
+      </svg>
+    </button>
+    <div class="mb">
+      <div class="mf" id="mf"></div>
+    </div>
+  </div>
+
+  <!-- SoundCloud toast -->
+  <div id="sc-toast">
+    <div class="sc-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
+        <path
+          d="M11.56 8.87V17h-1.12V10.1l-2 .67L8 9.77l3.16-1.2h.4zm6.94.05a3.5 3.5 0 0 1-.72 1.14c-.31.33-.66.6-1.06.82a4.31 4.31 0 0 1-1.33.47V9.96c.3-.07.59-.2.85-.38.26-.18.46-.4.62-.67h-1.47V7.8h3.6v1.12h-.49z" />
+        <circle cx="12" cy="12" r="10" fill="none" stroke="#fff" stroke-width="1.5" />
+      </svg></div>
+    <div class="sc-txt">
+      <div class="sc-title" id="sc-toast-title">Загрузка...</div>
+      <div class="sc-sub" id="sc-toast-sub">SoundCloud</div>
+      <div class="sc-bar" id="sc-toast-bar">
+        <div class="sc-bar-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="canvas-log-ov" aria-hidden="true">
+    <button id="canvas-log-copy" type="button" onclick="copyCanvasLogs(event)" title="Скопировать canvas логи">
+      Копировать
+    </button>
+    <div id="canvas-log-list"></div>
+  </div>
+
+  <!-- Playlist Create Overlay -->
+  <div id="pl-create-ov" class="ov" onclick="if(event.target === this) closePlaylistCreate()">
+    <div class="sheet">
+      <h3>Новый плейлист</h3>
+      <p>Введите название для вашей подборки</p>
+      <input type="text" id="pl-name-in" placeholder="Название плейлиста...">
+      <div class="r">
+        <button class="ok" onclick="saveNewPlaylist()">Создать</button>
+        <button class="ghost" onclick="closePlaylistCreate()">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Track to Playlist Overlay -->
+  <div id="trk-pl-ov" class="ov" onclick="if(event.target === this) closeTrackPlaylistModal()">
+    <div class="sheet">
+      <h3 id="trk-pl-title">Добавить в плейлист</h3>
+      <p>Выберите плейлисты для этого трека</p>
+      <div id="trk-pl-list" class="chklist"></div>
+      <div class="r" style="margin-top: 16px;">
+        <button class="ghost" onclick="openPlaylistCreateFromTrack()" style="flex:1;">+ Новый плейлист</button>
+        <button class="ok" onclick="saveTrackPlaylistModal()" style="flex:1;">Готово</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUEUE OVERLAY -->
+  <div id="queue-ov" class="ov" style="z-index:500" onclick="if(event.target === this) closeQueue()">
+    <div class="sheet" style="max-height:80vh;display:flex;flex-direction:column">
+      <h3>Очередь воспроизведения</h3>
+      <p>Треки, которые будут играть дальше</p>
+      <div id="queue-list" style="flex:1;overflow-y:auto;max-height:60vh"></div>
+    </div>
+  </div>
+  <!-- PROFILE VIEW -->
+  <div id="vprof" class="view">
+    <div class="prof-hd">
+      <button class="prof-back" onclick="sv('h')">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+    </div>
+    <div class="prof-main">
+      <div class="prof-info">
+        <div class="prof-avatar">
+          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=liquify" alt="avatar">
+        </div>
+        <div class="prof-text">
+          <h1 id="prof-username">User</h1>
+          <p>2 подписчика • 92 подписки</p>
+        </div>
+      </div>
+      <div class="prof-actions">
+        <button class="prof-btn-edit" onclick="editProfileName()">Изменить</button>
+        <button class="prof-btn-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></button>
+        <button class="prof-btn-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+        <button class="prof-btn-icon" onclick="supabaseClient.auth.signOut().then(()=>location.reload())" title="Выйти"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+      </div>
+    </div>
+    <div class="prof-playlists">
+      <h2>Плейлисты</h2>
+      <div id="prof-pl-list">
+        <div class="prof-pl-item" onclick="openHomePlaylist('favorites')">
+          <div class="prof-pl-art" style="background:linear-gradient(135deg,rgba(167,139,250,.6),rgba(80,40,140,.8))"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.8" stroke-linecap="round" style="margin:18px"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+          <div class="prof-pl-info">
+            <div class="prof-pl-title">Любимые треки</div>
+            <div class="prof-pl-sub">Автоматический плейлист</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav id="nav">
+    <button class="nb on" id="nbh" onclick="sv('h')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      Главная
+    </button>
+    <button class="nb" id="nbs" onclick="sv('s')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      Поиск
+    </button>
+    <button class="nb" id="nbl" onclick="sv('l')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round">
+        <path d="M3 18V6a1 1 0 0 1 1-1h5l2 3h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" />
+      </svg>
+      Медиатека
+    </button>
+    <button class="nb" id="nbsett" onclick="sv('sett')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round">
+        <circle cx="12" cy="12" r="3" />
+        <path
+          d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      </svg>
+      Настройки
+    </button>
+  </nav>
+  <!-- LYRICS OVERLAY -->
+  <div id="lx-ov">
+    <div id="lx-ov-bg"></div>
+    <div id="lx-ov-topbar">
+      <div id="lx-ov-provider">Provider: —</div>
+      <button id="lx-ov-close" onclick="closeFullLyrics()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+    </div>
+    <div id="lx-ov-songinfo">
+      <div class="sl-title" id="lx-ov-song-title"></div>
+      <div class="sl-artist" id="lx-ov-song-artist"></div>
+    </div>
+    <div id="lx-ov-list"></div>
+  </div>
+
+  <audio id="aud" preload="metadata" playsinline style="display:none"></audio>
+
+
+  <script>
+    const liquifyEngine = (() => {
+      const FILTERS_SVG_ID = 'liquify-glass-filters-local';
+      const injected = new Map();
+      let filterCounter = 0;
+      let ro = null;
+      let mo = null;
+
+      // Target selectors: Folders (.plc), Mini-player (#mini), Glass Panels (.glass-panel, .sheet), Overlays (.lx-ov-bg)
+      const selectors = [
+        '.plc', '#mini', '.glass-panel', '.sheet',
+        '.lx-ov-bg', '.tx-ov-bg', '#lx-sec', '.sp-btn',
+        '.liquify-card', '.canvas-meta-glass'
+      ];
+
+      function getOrCreateSvgRoot() {
+        let svg = document.getElementById(FILTERS_SVG_ID);
+        if (svg) return svg;
+        svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('id', FILTERS_SVG_ID);
+        svg.setAttribute('width', '1');
+        svg.setAttribute('height', '1');
+        svg.style.position = 'fixed';
+        svg.style.left = '-99px';
+        svg.style.top = '-99px';
+        svg.style.opacity = '0.01';
+        svg.style.pointerEvents = 'none';
+        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        svg.appendChild(defs);
+        document.body.prepend(svg);
+        return svg;
+      }
+
+      function makeMapDataUrl(width, height, borderRadius = 12, edgeScale = 1) {
+        const w = Math.max(40, Math.round(width));
+        const h = Math.max(40, Math.round(height));
+        const bw = Math.min(w, h) * 0.07 * 0.5 * Math.max(0.4, edgeScale || 1);
+        const id = `r${w}x${h}x${borderRadius}`;
+        const rGrad = `r-grad-${id}`;
+        const bGrad = `b-grad-${id}`;
+        const svg = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">` +
+          `<defs>` +
+          `<linearGradient id="${rGrad}" x1="100%" y1="0%" x2="0%" y2="0%"><stop offset="0%" stop-color="#0000"/><stop offset="100%" stop-color="red"/></linearGradient>` +
+          `<linearGradient id="${bGrad}" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#0000"/><stop offset="100%" stop-color="blue"/></linearGradient>` +
+          `</defs>` +
+          `<rect width="${w}" height="${h}" fill="black"/>` +
+          `<rect width="${w}" height="${h}" rx="${borderRadius}" fill="url(#${rGrad})"/>` +
+          `<rect width="${w}" height="${h}" rx="${borderRadius}" fill="url(#${bGrad})" style="mix-blend-mode:screen"/>` +
+          `<rect x="${bw}" y="${bw}" width="${w - bw * 2}" height="${h - bw * 2}" rx="${borderRadius}" fill="hsl(0 0% 50% / .93)" style="filter:blur(2px)"/>` +
+          `</svg>`;
+        return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+      }
+
+      function createFilter(defs, id, refractScale = 1) {
+        const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+        filter.setAttribute('id', id);
+        filter.setAttribute('x', '0%'); filter.setAttribute('y', '0%');
+        filter.setAttribute('width', '100%'); filter.setAttribute('height', '100%');
+        filter.setAttribute('color-interpolation-filters', 'sRGB');
+        const scaleMul = Math.max(0.4, Number(refractScale) || 1);
+
+        const img = document.createElementNS('http://www.w3.org/2000/svg', 'feImage');
+        img.setAttribute('x', '0'); img.setAttribute('y', '0');
+        img.setAttribute('width', '100%'); img.setAttribute('height', '100%');
+        img.setAttribute('preserveAspectRatio', 'none'); img.setAttribute('result', 'map');
+
+        const makeDisp = (res, sc) => {
+          const d = document.createElementNS('http://www.w3.org/2000/svg', 'feDisplacementMap');
+          d.setAttribute('in', 'SourceGraphic'); d.setAttribute('in2', 'map'); d.setAttribute('result', res);
+          d.setAttribute('scale', String(sc)); d.setAttribute('xChannelSelector', 'R'); d.setAttribute('yChannelSelector', 'G');
+          return d;
+        };
+
+        const makeMatrix = (inN, vals, res) => {
+          const m = document.createElementNS('http://www.w3.org/2000/svg', 'feColorMatrix');
+          m.setAttribute('in', inN); m.setAttribute('type', 'matrix'); m.setAttribute('values', vals); m.setAttribute('result', res);
+          return m;
+        };
+
+        filter.appendChild(img);
+        filter.appendChild(makeDisp('dR', -18 * scaleMul)); filter.appendChild(makeMatrix('dR', '1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0', 'red'));
+        filter.appendChild(makeDisp('dG', -12 * scaleMul)); filter.appendChild(makeMatrix('dG', '0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0', 'green'));
+        filter.appendChild(makeDisp('dB', -8 * scaleMul)); filter.appendChild(makeMatrix('dB', '0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0', 'blue'));
+
+        const b1 = document.createElementNS('http://www.w3.org/2000/svg', 'feBlend');
+        b1.setAttribute('in', 'red'); b1.setAttribute('in2', 'green'); b1.setAttribute('mode', 'screen'); b1.setAttribute('result', 'rg');
+        const b2 = document.createElementNS('http://www.w3.org/2000/svg', 'feBlend');
+        b2.setAttribute('in', 'rg'); b2.setAttribute('in2', 'blue'); b2.setAttribute('mode', 'screen'); b2.setAttribute('result', 'rgb');
+
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur');
+        g.setAttribute('in', 'rgb'); g.setAttribute('stdDeviation', '0.2');
+
+        filter.appendChild(b1); filter.appendChild(b2); filter.appendChild(g);
+        defs.appendChild(filter);
+        return { filter, feImage: img };
+      }
+
+      function applyToElement(el) {
+        if (!el) return;
+
+        let meta = injected.get(el);
+
+        if (!meta) {
+          const defs = getOrCreateSvgRoot().querySelector('defs');
+          const id = `glass-f-local-${filterCounter++}`;
+          const edgeScale = parseFloat(el.dataset.lqEdgeScale || '1') || 1;
+          const refractScale = parseFloat(el.dataset.lqRefractScale || '1') || 1;
+          const blurValue = el.dataset.lqBlur || '1.5px';
+          const nodes = createFilter(defs, id, refractScale);
+          meta = {
+            id,
+            node: nodes.filter,
+            feImage: nodes.feImage,
+            edgeScale,
+            blurValue,
+            update: () => {
+              const r = el.getBoundingClientRect();
+              if (!r.width || !r.height) return;
+              const rad = parseFloat(getComputedStyle(el).borderRadius) || 12;
+              const url = makeMapDataUrl(r.width, r.height, rad, meta.edgeScale);
+              meta.feImage.setAttribute('href', url);
+              meta.feImage.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', url);
+            }
+          };
+          injected.set(el, meta);
+          if (ro) ro.observe(el);
+        }
+
+        // Always re-apply styles/classes in case external JS wiped them
+        if (!el.classList.contains('liquify-glass-target')) {
+          el.classList.add('liquify-glass-target');
+        }
+        el.style.setProperty('--glass-filter', `url(#${meta.id})`);
+        el.style.setProperty('--glass-blur', meta.blurValue || '1.5px');
+        meta.update();
+      }
+
+      function updateAll() {
+        const allowed = new Set();
+        selectors.forEach(sel => document.querySelectorAll(sel).forEach(el => {
+          allowed.add(el);
+          applyToElement(el);
+        }));
+
+        injected.forEach((meta, el) => {
+          if (!allowed.has(el) || !document.contains(el)) {
+            meta.node.remove();
+            el.classList.remove('liquify-glass-target');
+            injected.delete(el);
+            return;
+          }
+          meta.update();
+        });
+      }
+
+      return {
+        enable: () => {
+          if (!ro) ro = new ResizeObserver((entries) => {
+            entries.forEach(entry => {
+              const meta = injected.get(entry.target);
+              if (meta) meta.update();
+            });
+          });
+
+          updateAll();
+
+          if (!mo) mo = new MutationObserver(() => requestAnimationFrame(updateAll));
+          mo.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+
+          // Add scroll listeners to update filters when containers move
+          window.addEventListener('scroll', () => requestAnimationFrame(updateAll), true);
+          document.querySelectorAll('.view, .pll').forEach(el => {
+            el.addEventListener('scroll', () => requestAnimationFrame(updateAll), { passive: true });
+          });
+        }
+      };
+    })();
+
+
+    // ── Mini-player swipe to change track ──
+    (function() {
+      const area = document.getElementById('mini-swipe-area');
+      if (!area) return;
+      let startX = 0, startY = 0, dragging = false, moved = false;
+      const THRESHOLD = 50;
+
+      function preloadNeighbourArt(dir) {
+        // Use global preload that retains references
+        if (typeof preloadNeighborCovers === 'function') {
+          preloadNeighborCovers();
+          return;
+        }
+        if (!window.T || !window.T.length) return;
+        const len = window.T.length;
+        const targetIdx = dir === 'left'
+          ? (window.cur + 1) % len
+          : (window.cur - 1 + len) % len;
+        const art = window.T[targetIdx] && window.T[targetIdx].art;
+        if (art) {
+          const img = new Image();
+          img.src = art;
+        }
+      }
+
+      function preloadBothNeighbours() {
+        if (typeof preloadNeighborCovers === 'function') {
+          preloadNeighborCovers();
+        } else {
+          preloadNeighbourArt('left');
+          preloadNeighbourArt('right');
+        }
+      }
+
+
+
+      function doSwipe(dir) {
+        preloadNeighbourArt(dir);
+        const outCls = dir === 'left' ? 'mini-swipe-out-left' : 'mini-swipe-out-right';
+        const inCls  = dir === 'left' ? 'mini-swipe-in-left'  : 'mini-swipe-in-right';
+
+        // Pre-compute the next track index
+        const len = window.T ? window.T.length : 0;
+        if (!len) return;
+        const currentCur = window.cur >= 0 ? window.cur : -1;
+        if (currentCur < 0) return;
+        
+        const nextIdx = dir === 'left'
+          ? (currentCur + 1) % len
+          : (currentCur - 1 + len) % len;
+        const nextTrack = window.T[nextIdx];
+
+        // Start pre-refreshing the track during out-animation (non-blocking)
+        let preRefreshDone = false;
+        if (nextTrack) {
+          if (nextTrack.isSoundCloud && !nextTrack._offlineCached && typeof scRefreshTrackForPlayback === 'function') {
+            scRefreshTrackForPlayback(nextTrack, true).then(() => { preRefreshDone = true; }).catch(() => {});
+          }
+          if (nextTrack._offlineCached && typeof getOfflineCachedTrackUrl === 'function') {
+            getOfflineCachedTrackUrl(nextTrack).then(() => { preRefreshDone = true; }).catch(() => {});
+          }
+        }
+
+        area.classList.add(outCls);
+        area.addEventListener('animationend', function handler() {
+          area.removeEventListener('animationend', handler);
+          area.classList.remove(outCls);
+
+          // Update mini player text/art IMMEDIATELY before in-animation
+          if (nextTrack) {
+            const mint = document.getElementById('mint');
+            const minar = document.getElementById('minar');
+            const ma = document.getElementById('mina');
+            const me = document.getElementById('minem');
+            if (mint) mint.textContent = nextTrack.title || '—';
+            if (minar) minar.textContent = nextTrack.artist || '';
+            if (nextTrack.art && ma) {
+              if (me) me.style.display = 'none';
+              let img = ma.querySelector('img');
+              if (!img) { img = document.createElement('img'); ma.appendChild(img); }
+              img.src = nextTrack.art;
+            }
+          }
+
+          // Start playback
+          if (dir === 'left') {
+            if (typeof playNext === 'function') playNext();
+          } else {
+            if (typeof play === 'function') play(nextIdx);
+          }
+
+          area.classList.add(inCls);
+          area.addEventListener('animationend', function h2() {
+            area.removeEventListener('animationend', h2);
+            area.classList.remove(inCls);
+          });
+        });
+      }
+
+      area.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        dragging = true; moved = false;
+
+      }, { passive: true });
+
+      area.addEventListener('touchmove', e => {
+        if (!dragging) return;
+        const dx = e.touches[0].clientX - startX;
+        const dy = e.touches[0].clientY - startY;
+        if (Math.abs(dx) > Math.abs(dy) + 5) {
+          moved = true;
+          area.classList.add('is-swiping');
+          area.style.transform = `translateX(${dx * 0.35}px)`;
+          area.style.opacity = String(1 - Math.min(Math.abs(dx) / 180, 0.4));
+        }
+      }, { passive: true });
+
+      area.addEventListener('touchend', e => {
+        if (!dragging) return;
+        dragging = false;
+        area.classList.remove('is-swiping');
+        area.style.transform = '';
+        area.style.opacity = '';
+        const dx = e.changedTouches[0].clientX - startX;
+        if (moved && Math.abs(dx) >= THRESHOLD) {
+          e.stopPropagation();
+          doSwipe(dx < 0 ? 'left' : 'right');
+        }
+        moved = false;
+      });
+
+      // Mouse support
+      area.addEventListener('mousedown', e => {
+        startX = e.clientX; dragging = true; moved = false;
+        e.preventDefault();
+      });
+      window.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        const dx = e.clientX - startX;
+        moved = true;
+        area.style.transform = `translateX(${dx * 0.35}px)`;
+        area.style.opacity = String(1 - Math.min(Math.abs(dx) / 180, 0.4));
+      });
+      window.addEventListener('mouseup', e => {
+        if (!dragging) return;
+        dragging = false;
+        area.style.transform = '';
+        area.style.opacity = '';
+        const dx = e.clientX - startX;
+        if (moved && Math.abs(dx) >= THRESHOLD) doSwipe(dx < 0 ? 'left' : 'right');
+        moved = false;
+      });
+    })();
+
+    // ── Sort tracks ──
+    const SORT_MODES = [
+      { key: 'az',   label: 'A–Z',    icon: false },
+      { key: 'za',   label: 'Z–A',    icon: true  },
+      { key: 'new',  label: 'Новые',  icon: false },
+      { key: 'old',  label: 'Старые', icon: false },
+    ];
+    let _sortIdx = 0;
+
+    window.cycleSortOrder = function() {
+      _sortIdx = (_sortIdx + 1) % SORT_MODES.length;
+      const mode = SORT_MODES[_sortIdx];
+      const btn = document.getElementById('sortbtn');
+      const lbl = document.getElementById('sort-label');
+      if (lbl) lbl.textContent = mode.label;
+      if (btn) btn.classList.toggle('flipped', mode.icon);
+      applySortOrder(mode.key);
+    };
+
+    function applySortOrder(key) {
+      if (!window.T) return;
+      const savedCur = window.cur >= 0 ? window.T[window.cur] : null;
+      if (key === 'az') {
+        window.T.sort((a, b) => (a.title||'').localeCompare(b.title||'', 'ru'));
+      } else if (key === 'za') {
+        window.T.sort((a, b) => (b.title||'').localeCompare(a.title||'', 'ru'));
+      } else if (key === 'new') {
+        // Sort by insertion order descending (newest first)
+        window.T.sort((a, b) => (b._insertIdx != null ? b._insertIdx : 0) - (a._insertIdx != null ? a._insertIdx : 0));
+      } else if (key === 'old') {
+        // Sort by insertion order ascending (oldest first)
+        window.T.sort((a, b) => (a._insertIdx != null ? a._insertIdx : 0) - (b._insertIdx != null ? b._insertIdx : 0));
+      }
+      // restore cur pointer
+      if (savedCur) window.cur = window.T.indexOf(savedCur);
+      if (typeof rl === 'function') rl();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      liquifyEngine.enable();
+      // Update custom slider fill
+      document.querySelectorAll('.lq-slider').forEach(sl => {
+        function updateSliderFill(el) {
+          const pct = ((el.value - el.min) / (el.max - el.min)) * 100;
+          el.style.setProperty('--slider-pct', pct + '%');
+          // Inject a style to fill the webkit track
+          el.style.background = 'transparent';
+          // Use a data attribute approach via inline style for track fill
+          const styleId = 'lq-slider-track-style';
+          let styleEl = document.getElementById(styleId);
+          if (!styleEl) {
+            styleEl = document.createElement('style');
+            styleEl.id = styleId;
+            document.head.appendChild(styleEl);
+          }
+          // Rebuild rules for all sliders
+          const rules = Array.from(document.querySelectorAll('.lq-slider')).map((s, i) => {
+            s.dataset.sliderIdx = i;
+            const p = ((s.value - s.min) / (s.max - s.min)) * 100;
+            return `.lq-slider[data-slider-idx="${i}"]::-webkit-slider-runnable-track { background: linear-gradient(to right, rgba(255,255,255,0.55) ${p}%, rgba(255,255,255,0.12) ${p}%) !important; }`;
+          });
+          styleEl.textContent = rules.join('\n');
+        }
+        updateSliderFill(sl);
+        sl.addEventListener('input', () => updateSliderFill(sl));
+      });
+    });
+
+
+  </script>
+
+  <script>
+    // ── HOME SCREEN HELPERS ──────────────────────────────────────────
+
+    // Extend sv() after app-logic loads
+    document.addEventListener('DOMContentLoaded', function() {
+      // Patch sv to handle home view
+      const _origSv = window.sv;
+      window.sv = function(n) {
+        if (n === 'h') {
+          document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+          document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
+          const vh = document.getElementById('vh');
+          if (vh) vh.classList.add('active');
+          const nbh = document.getElementById('nbh');
+          if (nbh) nbh.classList.add('on');
+          const mini = document.getElementById('mini');
+          const cur = window.cur !== undefined ? window.cur : -1;
+          if (cur >= 0 && mini) mini.classList.add('show');
+          hmUpdateGreeting();
+          hmUpdateNowPlaying();
+          return;
+        }
+        _origSv(n);
+      };
+
+      // Set greeting based on time
+      hmUpdateGreeting();
+      
+      // Update now playing in home on track change
+      const origSetTrack = window.setTrack;
+      if (origSetTrack) {
+        const origFn = origSetTrack;
+        window.setTrack = function(...args) {
+          origFn.apply(this, args);
+          setTimeout(hmUpdateNowPlaying, 400);
+        };
+      }
+    });
+
+    function hmUpdateGreeting() {
+      const el = document.getElementById('hm-greeting-text');
+      if (!el) return;
+      const h = new Date().getHours();
+      if (h >= 5 && h < 12) el.textContent = 'Доброе утро';
+      else if (h >= 12 && h < 17) el.textContent = 'Добрый день';
+      else if (h >= 17 && h < 22) el.textContent = 'Добрый вечер';
+      else el.textContent = 'Доброй ночи';
+    }
+
+    function hmUpdateNowPlaying() {
+      const titleEl = document.getElementById('hm-nr-title');
+      const artistEl = document.getElementById('hm-nr-artist');
+      const artEl = document.querySelector('.hm-nr-art');
+      if (!titleEl) return;
+      const T = window.T || [];
+      const cur = window.cur !== undefined ? window.cur : -1;
+      if (cur >= 0 && T[cur]) {
+        const t = T[cur];
+        titleEl.textContent = t.name || '—';
+        artistEl.textContent = t.artist || 'Неизвестный исполнитель';
+        if (artEl && t.cover) {
+          artEl.style.backgroundImage = `url(${t.cover})`;
+          artEl.style.backgroundSize = 'cover';
+          artEl.style.backgroundPosition = 'center';
+          const span = artEl.querySelector('span');
+          if (span) span.style.display = 'none';
+        }
+      }
+    }
+
+    function hmSetPill(id) {
+      document.querySelectorAll('.hm-pill').forEach(p => p.classList.remove('on'));
+      const pill = document.getElementById('hpill-' + id);
+      if (pill) pill.classList.add('on');
+    }
+  </script>
+  <script src=spotify-login-overlay.js></script>
+  <script src=app-logic.js></script>
+
+
+  <script>
+    /* ── Lyrics fixes v2 ── */
+    (function() {
+
+
+      // 1. Mini lyrics patch — just marks as patched, actual work done by _slUpdateMiniPreview in app-logic.js
+      function patchMiniLyrics() {
+        if (!window.updateLyricsDisplay || window.updateLyricsDisplay.__lqMiniPatched) return false;
+        // The SpicyLyrics engine (_slPhysicsTick / _slUpdateMiniPreview) handles everything.
+        // Just mark patched so the interval stops retrying.
+        window.updateLyricsDisplay.__lqMiniPatched = true;
+        return true;
+      }
+
+      function _getSylText(line) {
+        if (!line.Lead?.Syllables) return line.Text || '';
+        return line.Lead.Syllables.map(s => (s.IsPartOfWord ? '' : ' ') + s.Text).join('');
+      }
+
+      // 2. ROLLING MINI LYRICS — smooth vertical scroll like full screen
+      function patchRollingMiniLyrics() {
+        const el = document.getElementById('lx-sec-b');
+        if (!el || el.__lqRollingPatched) return;
+        el.__lqRollingPatched = true;
+        
+        el.style.overflow = 'hidden';
+        el.style.position = 'relative';
+        el.style.height = '64px'; // Increased to prevent cutoff
+        
+        const reel = document.createElement('div');
+        reel.style.display = 'flex';
+        reel.style.flexDirection = 'column';
+        reel.style.transition = 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)';
+        el.appendChild(reel);
+        
+        let lastCurr = '';
+        let lastNext = '';
+        
+        el.__lqRoll = function(curr, next) {
+          if (curr === lastCurr && next === lastNext) return;
+          
+          const isProgression = curr === lastNext && lastNext !== '';
+          
+          if (isProgression) {
+            // Add NEW next at the bottom
+            const nLine = document.createElement('div');
+            nLine.className = 'mini-next';
+            nLine.textContent = next || '';
+            reel.appendChild(nLine);
+            
+            // Current top child (lastCurr) is still there. 
+            // Children are now: [old_curr, new_curr, new_next]
+            // We want to scroll so new_curr is at top.
+            const offset = reel.children[0].offsetHeight;
+            reel.style.transform = `translateY(-${offset}px)`;
+            
+            // Change classes mid-flight or after
+            if (reel.children[1]) reel.children[1].className = 'mini-act';
+            
+            setTimeout(() => {
+              reel.style.transition = 'none';
+              if (reel.children[0]) reel.removeChild(reel.children[0]);
+              reel.style.transform = 'translateY(0)';
+              // Ensure classes are correct
+              if (reel.children[0]) reel.children[0].className = 'mini-act';
+              if (reel.children[1]) reel.children[1].className = 'mini-next';
+              
+              requestAnimationFrame(() => {
+                reel.style.transition = 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)';
+              });
+            }, 500);
+          } else {
+            // Reset/Jump
+            reel.innerHTML = '';
+            const cLine = document.createElement('div');
+            cLine.className = 'mini-act';
+            cLine.textContent = curr || '';
+            reel.appendChild(cLine);
+            
+            const nLine = document.createElement('div');
+            nLine.className = 'mini-next';
+            nLine.textContent = next || '';
+            reel.appendChild(nLine);
+            
+            reel.style.transform = 'translateY(0)';
+          }
+          
+          lastCurr = curr;
+          lastNext = next;
+        };
+      }
+
+      // 3. FULLSCREEN LYRICS MANUAL SCROLL
+      let userScrollUntil = 0;
+
+      function patchFullscreenScroll() {
+        const list = document.getElementById('lx-ov-list');
+        if (!list || list.__lqScrollPatched) return;
+        list.__lqScrollPatched = true;
+
+        const PAUSE_MS = 3000;
+        ['touchstart', 'wheel', 'mousedown'].forEach(ev => {
+          list.addEventListener(ev, () => {
+            userScrollUntil = Date.now() + PAUSE_MS;
+          }, { passive: true });
+        });
+
+        window.__lqUserScrolling = () => Date.now() < userScrollUntil;
+      }
+
+      // 4. PATCH updateLyricsPhysics to respect user scroll
+      function patchPhysics() {
+        const _orig = window.updateLyricsPhysics;
+        if (!_orig || _orig.__lqPatched) return;
+
+        window.updateLyricsPhysics = function() {
+          const list = document.getElementById('lx-ov-list');
+          if (list && window.__lqUserScrolling && window.__lqUserScrolling()) {
+            if (window.lxSprings) {
+              window.lxSprings.scroll.current = list.scrollTop;
+              window.lxSprings.scroll.target  = list.scrollTop;
+              window.lxSprings.scroll.velocity = 0;
+            }
+            if (document.getElementById('lx-ov').classList.contains('show')) {
+              requestAnimationFrame(window.updateLyricsPhysics);
+            }
+            return;
+          }
+          _orig();
+        };
+        window.updateLyricsPhysics.__lqPatched = true;
+      }
+
+      // Run patches after app-logic loads
+      let patchAttempts = 0;
+      requestAnimationFrame(function tryPatch() {
+        patchAttempts++;
+        patchRollingMiniLyrics();
+        patchFullscreenScroll();
+        patchPhysics();
+        const miniDone = !!(document.getElementById('lx-sec-b') && document.getElementById('lx-sec-b').__lqRollingPatched);
+        // Retry until all patched (max 120 frames = ~2 sec)
+        if (patchAttempts < 120 && (!miniDone && (!window.updateLyricsDisplay || !window.updateLyricsDisplay.__lqMiniPatched))) {
+          requestAnimationFrame(tryPatch);
+        }
+      });
+
+      // Also patch on lx-ov open (in case list rebuilt)
+      const lxOv = document.getElementById('lx-ov');
+      if (lxOv) {
+        new MutationObserver(() => {
+          patchFullscreenScroll();
+        }).observe(lxOv, { attributes: true, attributeFilter: ['class'] });
+      }
+
+    })();
+  </script>
+
+  </script>
+
+
+  <!-- Login Modal -->
+  <div id="login-modal" class="lq-login-modal">
+    <div class="lq-login-content">
+      <div class="lq-login-close" onclick="toggleLoginModal()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </div>
+      <h2 id="auth-title">Вход</h2>
+      <div id="auth-error" class="lq-auth-error"></div>
+      <input type="email" id="login-email" class="lq-input" placeholder="Почта">
+      <input type="password" id="login-password" class="lq-input" placeholder="Пароль">
+      <button id="auth-submit" class="lq-btn lq-login-btn" onclick="handleAuthAction()">Войти</button>
+      <div id="auth-toggle" class="lq-auth-toggle" onclick="toggleAuthMode()">Нет аккаунта? Зарегистрироваться</div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://ygurhtebizuvceqiabze.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_gVsrqbxkJBTRoZ-bZ76IPA_ceFDjwCs';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    let isRegisterMode = false;
+
+    function toggleLoginModal() {
+      const modal = document.getElementById('login-modal');
+      if (modal) {
+        modal.classList.toggle('show');
+        document.getElementById('auth-error').innerText = ''; // clear error
+      }
+    }
+
+    function toggleAuthMode() {
+      isRegisterMode = !isRegisterMode;
+      const title = document.getElementById('auth-title');
+      const submit = document.getElementById('auth-submit');
+      const toggle = document.getElementById('auth-toggle');
+      document.getElementById('auth-error').innerText = '';
+      
+      if (isRegisterMode) {
+        title.innerText = 'Регистрация';
+        submit.innerText = 'Зарегистрироваться';
+        toggle.innerText = 'Уже есть аккаунт? Войти';
+      } else {
+        title.innerText = 'Вход';
+        submit.innerText = 'Войти';
+        toggle.innerText = 'Нет аккаунта? Зарегистрироваться';
+      }
+    }
+
+    async function handleAuthAction() {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const errorDiv = document.getElementById('auth-error');
+      const submitBtn = document.getElementById('auth-submit');
+
+      if (!email || !password) {
+        errorDiv.innerText = 'Введите почту и пароль';
+        return;
+      }
+
+      errorDiv.innerText = '';
+      const originalText = submitBtn.innerText;
+      submitBtn.innerText = 'Загрузка...';
+
+      try {
+        let error;
+        if (isRegisterMode) {
+          const res = await supabaseClient.auth.signUp({ email, password });
+          error = res.error;
+        } else {
+          const res = await supabaseClient.auth.signInWithPassword({ email, password });
+          error = res.error;
+        }
+
+        if (error) throw error;
+
+        // Success handling
+        toggleLoginModal();
+        alert(isRegisterMode ? 'Регистрация успешна!' : 'Успешный вход!');
+        // Update avatar visually and session
+        supabaseClient.auth.getSession().then(({ data: { session } }) => {
+          currentUserSession = session;
+          if (session?.user?.email) {
+            document.getElementById('prof-username').innerText = session.user.email.split('@')[0];
+          }
+          // Initialize Supabase sync
+          if (session && typeof window.sbInitSync === 'function') {
+            window.sbInitSync(session);
+          }
+        });
+        const avatar = document.querySelector('.hm-avatar');
+        if (avatar) avatar.style.background = 'rgba(100, 255, 100, 0.3)';
+        
+      } catch (err) {
+        errorDiv.innerText = err.message || 'Произошла ошибка';
+      } finally {
+        submitBtn.innerText = originalText;
+      }
+    }
+
+    let currentUserSession = null;
+
+    function handleAvatarClick() {
+      if (currentUserSession) {
+        // Build playlists list
+        const listDiv = document.getElementById('prof-pl-list');
+        if (listDiv && typeof P !== 'undefined') {
+          listDiv.innerHTML = P.filter(p => p.id !== 'all' && p.id !== 'recent').map(pl => {
+            let artHtml = '';
+            if (typeof renderPlaylistArtwork === 'function') {
+              artHtml = renderPlaylistArtwork(pl, 60);
+              if (artHtml.includes('pl-art-fallback')) {
+                artHtml = `<div class="prof-pl-art" style="background:linear-gradient(135deg,rgba(167,139,250,.6),rgba(80,40,140,.8))">${artHtml.replace(/width="[^"]+"/, 'width="30"').replace(/height="[^"]+"/, 'height="30"')}</div>`;
+              } else {
+                artHtml = `<div class="prof-pl-art">${artHtml}</div>`;
+              }
+            }
+            const count = (pl.trackIds || []).length;
+            return `
+              <div class="prof-pl-item" onclick="openHomePlaylist('${pl.id}')">
+                ${artHtml}
+                <div class="prof-pl-info">
+                  <div class="prof-pl-title">${pl.name}</div>
+                  <div class="prof-pl-sub">${count} треков</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+        sv('vprof');
+      } else {
+        toggleLoginModal();
+      }
+    }
+
+    function editProfileName() {
+      const newName = prompt('Введите новый никнейм:', document.getElementById('prof-username').innerText);
+      if (newName && newName.trim()) {
+        document.getElementById('prof-username').innerText = newName.trim();
+        localStorage.setItem('liquify_username', newName.trim());
+      }
+    }
+
+    // Check if session exists on load
+    supabaseClient.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        currentUserSession = session;
+        const avatar = document.querySelector('.hm-avatar');
+        if (avatar) avatar.style.background = 'rgba(100, 255, 100, 0.3)';
+        
+        // Restore username if any
+        const savedName = localStorage.getItem('liquify_username');
+        if (savedName) {
+          document.getElementById('prof-username').innerText = savedName;
+        } else if (session.user?.email) {
+          document.getElementById('prof-username').innerText = session.user.email.split('@')[0];
+        }
+
+        // Initialize Supabase sync on session restore
+        if (typeof window.sbInitSync === 'function') {
+          window.sbInitSync(session);
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

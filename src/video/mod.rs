@@ -6,6 +6,10 @@ pub mod desktop;
 pub mod android_hw;
 #[cfg(target_os = "android")]
 pub mod vulkan_import;
+#[cfg(target_os = "android")]
+pub mod raw_vulkan_ycbcr;
+#[cfg(target_os = "android")]
+pub mod ycbcr_pipeline;
 
 pub enum VideoFrame {
     Rgba(Vec<u8>, u32, u32),
